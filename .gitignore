@@ -1,0 +1,17 @@
+# Secrets & runtime state — never commit
+.env
+.env.*
+*.key
+auth.json
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
