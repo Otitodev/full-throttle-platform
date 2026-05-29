@@ -35,8 +35,21 @@ fallback, `_common.py`, JSON-to-stdout scripts, HERMES_HOME-aware state, no Herm
 
 Each lives under `skills/<name>/` with `SKILL.md` + `scripts/` + `references/`.
 
+## Onboarding a client
+
+`scripts/onboard_client.py` provisions a new client as an isolated Hermes profile (augment
+mode): config, secrets → `.env`, the four skills, and seeded brand/memory context, plus a
+`NEXT_STEPS.md` runbook. Driven by a non-secret `intake.json` + a gitignored `secrets.json`.
+
+```
+python scripts/onboard_client.py --intake intake.json --secrets secrets.json [--dry-run]
+```
+
+See `scripts/ONBOARDING.md` for the full runbook and `scripts/intake.example.json` /
+`scripts/secrets.example.json` for templates.
+
 ## Installing a skill into a profile
 
 Skills are sourced from this repo and installed into a Hermes profile's skills dir,
 e.g. `~/.hermes/profiles/mrfence/skills/`. Keep this repo as the source of truth and
-the per-profile copy as the runtime instance.
+the per-profile copy as the runtime instance. (The onboarding script does this copy for you.)

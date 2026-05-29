@@ -1,0 +1,31 @@
+{
+  "client": {
+    "slug": "mrfence",
+    "business_name": "Mr. Fence of Florida",
+    "phone": "+18506040900",
+    "domain": "mrfenceflorida.com",
+    "timezone": "America/Chicago",
+    "service_area": "Florida Panhandle (Bay, Okaloosa, Walton counties)",
+    "services": ["wood", "vinyl", "aluminum", "chain-link", "gates", "commercial"],
+    "brand_voice": "direct, local, no fluff; emphasize Gulf Coast durability"
+  },
+  "site": {
+    "mode": "augment",
+    "adapter": "wordpress-rest",
+    "wp_url": "https://mrfenceflorida.com",
+    "wp_user": "editor"
+  },
+  "channels": {
+    "owner_sms": "+18506040900",
+    "lead_route": "lead"
+  },
+  "crm": { "provider": "manual" },
+  "model": { "provider": "anthropic", "model": "claude-sonnet-4-6" },
+  "cadence": {
+    "reviews": "0 9 * * *",
+    "social": "0 10 * * 1,3,5",
+    "content": "0 9 * * 1",
+    "report": "0 8 * * 1"
+  },
+  "keywords": ["fence company panama city", "vinyl fence cost panama city", "wood fence lynn haven"]
+}

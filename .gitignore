@@ -3,6 +3,9 @@
 .env.*
 *.key
 auth.json
+secrets.json
+*-secrets.json
+# (secrets.example.json is a committed template — not ignored)
 
 # Python
 __pycache__/
