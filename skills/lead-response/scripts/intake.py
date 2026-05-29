@@ -22,7 +22,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _common import fail, state_dir
+from _common import audit, fail, state_dir
 from adapters.base import Lead, lead_fingerprint
 
 FIRST_TOUCH = (
@@ -96,6 +96,9 @@ def main() -> None:
             fh.write(json.dumps(lead.to_dict()) + "\n")
 
     target = f"sms:{lead.phone}" if lead.phone else f"email:{lead.email}"
+    if not duplicate:
+        audit("lead-response", action="lead_first_touch", target=target,
+              status="ok", rollback_ref=lead.id)
     print(json.dumps({
         "success": True,
         "duplicate": duplicate,

@@ -20,7 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _common import add_adapter_args, build_adapter, fail, load_json, save_json, state_dir
+from _common import add_adapter_args, audit, build_adapter, fail, load_json, save_json, state_dir
 from adapters.base import Post
 
 
@@ -70,6 +70,9 @@ def main() -> None:
             result = adapter.publish(Post.from_dict(entry))
             entry["status"] = "posted"
             published.append(result)
+            audit("social-scheduler", action="social_publish",
+                  target=",".join(entry.get("targets", [])) or entry.get("id", ""),
+                  status="ok", rollback_ref=entry.get("id"))
         except Exception as exc:  # isolate per-post failures; leave status for retry
             errors.append({"post_id": entry.get("id"), "error": f"{type(exc).__name__}: {exc}"})
 

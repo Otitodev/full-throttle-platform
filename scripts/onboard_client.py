@@ -29,7 +29,7 @@ import yaml
 
 SLUG_RE = re.compile(r"^[a-z0-9][a-z0-9_-]{0,63}$")
 PROFILE_DIRS = ["memories", "sessions", "skills", "skins", "logs", "plans", "workspace", "cron", "home"]
-SKILLS = ["content-publisher", "review-automation", "social-scheduler", "lead-response"]
+SKILLS = ["content-publisher", "review-automation", "social-scheduler", "lead-response", "governance"]
 VALID_ADAPTERS = {"wordpress-rest", "proxy-subdir", "manual"}
 
 # secrets.json key → profile .env key (only present keys are written)
@@ -95,6 +95,8 @@ def build_config(intake: dict) -> dict:
 
     cfg: dict = {
         "site_type": "augment",
+        # Governance (G1): no unrestricted code execution in production.
+        "agent": {"disabled_toolsets": ["code_execution"]},
         "publishing": {"adapter": site["adapter"]},
         "model": {
             "provider": model.get("provider", "anthropic"),
@@ -182,7 +184,13 @@ def agents_md(intake: dict) -> str:
         "- Augment, do not replace: publish via the configured adapter; never migrate the site.\n"
         "- Phone numbers must be E.164 for SMS.\n"
         "- Risky/destructive changes require owner approval before execution.\n"
-        "- First-touch to leads uses the approved template; reply within seconds.\n"
+        "- First-touch to leads uses the approved template; reply within seconds.\n\n"
+        "## Governance (see the governance skill)\n"
+        "- Before a risky mutation, emit a plan (governance plan.py) and gate it with clarify.\n"
+        "- Delegate workers with role=\"leaf\" and only the toolsets their job needs "
+        "(see governance/references/scope_matrix.md).\n"
+        "- Every external mutation is audited automatically; use governance status.py to review "
+        "and revert.py to roll back.\n"
     )
 
 

@@ -18,7 +18,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _common import add_adapter_args, build_adapter, fail
+from _common import add_adapter_args, audit, build_adapter, fail
 
 
 def main() -> None:
@@ -46,6 +46,8 @@ def main() -> None:
         fail(f"{type(exc).__name__}: {exc}")
         return
 
+    audit("review-automation", action="review_reply", target=args.review_id,
+          status="ok", rollback_ref=result.get("review_id"), approval_state="approved")
     print(json.dumps({"success": True, **result}))
 
 

@@ -21,7 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _common import fail, state_dir
+from _common import audit, fail, state_dir
 
 TEMPLATE = (
     "Hi {name}, thanks for choosing {business}! It was a pleasure working with you. "
@@ -64,6 +64,8 @@ def main() -> None:
     record = {"name": args.name, "customer": args.customer, "link": link, "sent_at": date.today().isoformat()}
     with log_path.open("a", encoding="utf-8") as fh:
         fh.write(json.dumps(record) + "\n")
+
+    audit("review-automation", action="review_request", target=args.customer or args.name, status="ok")
 
     print(json.dumps({
         "success": True,

@@ -279,9 +279,10 @@ it's a config migration, not a re-architecture.
 
 ## 12. Operational governance layer
 
-A first-class concern in v2 — the mechanism that makes constraint-first real. Partly built
-(dedup/idempotency already in our skills), partly net-new (execution plans, audit log,
-rollback). Tracked as a backlog epic with honest effort tags.
+A first-class concern in v2 — the mechanism that makes constraint-first real. **Built as the
+`governance` skill** (`skills/governance/`: `audit.py`, `plan.py`, `revert.py`, `status.py`,
+`scopes.py` + `references/scope_matrix.md`); the four capability skills auto-append every
+client-facing mutation to `<HERMES_HOME>/governance/audit.jsonl`.
 
 - **Execution plans before mutations.** Before changing an external system, the agent emits a
   structured plan that is logged, validated, and optionally approved before execution:

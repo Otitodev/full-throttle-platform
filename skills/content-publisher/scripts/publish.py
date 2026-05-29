@@ -28,7 +28,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _common import add_adapter_args, build_adapter, fail, slugify, state_dir
+from _common import add_adapter_args, audit, build_adapter, fail, slugify, state_dir
 from adapters.base import Post, today_iso
 
 
@@ -72,6 +72,9 @@ def main() -> None:
     try:
         adapter = build_adapter(args)
         result = adapter.publish(post)
+        audit("content-publisher", action="publish", target=str(result.get("url", "")),
+              status="ok", rollback_ref=result.get("rollback_ref"),
+              repo=getattr(args, "repo", None))
         print(json.dumps({"success": True, **result}, indent=2))
     except Exception as exc:
         fail(f"{type(exc).__name__}: {exc}")

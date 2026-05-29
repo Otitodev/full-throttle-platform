@@ -72,13 +72,13 @@ def main() -> None:
     print(f"Awaiting approval: {len(approval_queue)}")
     if approval_queue:
         for r in approval_queue:
-            print(f"  · [{r.get('id')}] {r.get('action')} → {r.get('target')}")
+            print(f"  - [{r.get('id')}] {r.get('action')} -> {r.get('target')}")
     print("By action:", ", ".join(f"{k}={v}" for k, v in by_action.items()) or "none")
     print("By status:", ", ".join(f"{k}={v}" for k, v in by_status.items()) or "none")
     if crons:
         print("Cron:")
         for c in crons:
-            print(f"  · {c['name']} [{c['schedule']}] state={c['state']} last={c['last_status']}")
+            print(f"  - {c['name']} [{c['schedule']}] state={c['state']} last={c['last_status']}")
     print(f"\nLast {len(timeline)} mutations:")
     for r in timeline:
         print(f"  {r.get('ts','')[:19]}  {r.get('skill','?'):16} {r.get('action','?'):16} "

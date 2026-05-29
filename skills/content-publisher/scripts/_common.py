@@ -109,6 +109,31 @@ def state_dir(override: str | None = None) -> Path:
     return base
 
 
+def audit(skill: str, action: str, target: str = "", status: str = "ok",
+          rollback_ref=None, repo=None, approval_state: str = "none") -> None:
+    """Append one mutation row to the shared governance audit log.
+
+    No cross-skill import — just writes the agreed JSONL contract (see the
+    governance skill). Best-effort: never raises into the caller.
+    """
+    import uuid
+    from datetime import datetime, timezone
+    try:
+        home = Path(os.environ.get("HERMES_HOME") or (Path.home() / ".hermes"))
+        gov = home / "governance"
+        gov.mkdir(parents=True, exist_ok=True)
+        row = {
+            "id": uuid.uuid4().hex[:12],
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "skill": skill, "action": action, "target": target, "status": status,
+            "rollback_ref": rollback_ref, "approval_state": approval_state, "repo": repo,
+        }
+        with (gov / "audit.jsonl").open("a", encoding="utf-8") as fh:
+            fh.write(json.dumps(row) + "\n")
+    except OSError:
+        pass
+
+
 def build_adapter(args):
     if args.adapter == "astro-git":
         from adapters.astro_git import AstroGitAdapter
