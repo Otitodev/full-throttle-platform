@@ -23,6 +23,16 @@ organic traffic loss **[MR §11]**. And the biggest revenue levers — speed-to-
 — aren't the website at all **[MR §1, §5]**. So we default to *improving what the client has*
 and winning on lead response + reputation, with a fresh site only as a fallback.
 
+**Positioning & operating principle (constraint-first).** We are NOT competing on "most
+autonomous AI," "largest agent swarm," or generalized intelligence. We compete on **fastest
+lead response, operational reliability, easiest onboarding, measurable ROI, and preservation
+of existing business infrastructure.** Agents are therefore treated as **bounded workflow
+executors**, not autonomous decision-makers: deterministic actions, structured outputs,
+explicit approvals, and auditable execution over open-ended autonomy. The platform succeeds
+when it reliably increases booked jobs, review volume, local trust, and owner responsiveness
+with minimal workflow disruption. This stance drives the governance layer (§12) and the
+narrowed agent topology (§6).
+
 ## 2. Two site modes
 
 Onboarding captures a `site_type` and picks a mode. Most clients are **Augment**.
@@ -38,13 +48,18 @@ Replaces the old hardcoded "git commit to Astro" assumption. A skill writes cont
 **adapter** decides how it lands on the client's surface. The adapter is chosen per client and
 recorded in their profile.
 
-| Adapter | Target | Notes |
-|---------|--------|-------|
-| `astro-git` | Greenfield Astro repo | The `seo-blog-publisher` skill we already built — one adapter, not the whole story. |
-| `wordpress-rest` | WordPress REST API | Most common contractor CMS. |
-| `wix-data` | Wix Data / CMS API | Locked design, editable content. |
-| `webhook` | Any system accepting a webhook | Generic escape hatch. |
-| `proxy-subdir` | Content on our infra, served at `client.com/blog` via **Cloudflare Workers reverse proxy** | The SEO-equity wedge — subdirectory beats subdomain, no migration. **[MR §11]** |
+| Adapter | Target | Priority / status |
+|---------|--------|-------------------|
+| `wordpress-rest` | WordPress REST API | **v2 primary** — most common contractor CMS. *(to build)* |
+| `proxy-subdir` | Content on our infra, served at `client.com/blog` via **Cloudflare Workers reverse proxy** | **v2 primary** — SEO-equity wedge; subdirectory beats subdomain, no migration **[MR §11]**. *(to build)* |
+| `astro-git` | Greenfield Astro repo | **Built** (`seo-blog-publisher`), but now the *deferred greenfield* adapter — fallback only, for site-less/broken-site clients. |
+| `wix-data` | Wix Data / CMS API | Deferred until demand. |
+| `webhook` | Any system accepting a webhook | Deferred until demand. |
+
+**v2 priority (reconciled with REVISION.md):** the two adapters that serve the augment-first
+default — `wordpress-rest` and `proxy-subdir` — are what we build next. `astro-git` is already
+built but is the *greenfield fallback*; `wix-data` and `webhook` are deferred until a client
+needs them.
 
 ## 4. Static picture — three repos, one runtime
 
@@ -108,11 +123,12 @@ contexts. Roster is ordered by revenue leverage from the research, not by "websi
   **[MR §5, §8]**. `[MCP/Skill]` GBP/Podium/Birdeye.
 - **GBP agent** (high) — Business Profile optimization, posts, Q&A, categories — the #1 local
   lever **[MR §5]**. `[MCP/Skill]`.
-- **Social Media agent** (basics, semi-automated) — schedule **real** before/after photos +
+- **Social Media agent** (basics — **built, parked**) — schedule **real** before/after photos +
   recycled reviews to GBP + Facebook + Nextdoor at 2–3×/week. Trust/proof support, **not** a
   lead driver. Guardrail: assist/schedule real job content, never fully auto-generate generic
   posts (authenticity penalty: trust 3.0 vs 4.5) **[MR §12]**. Shares source material with the
-  Reviews/GBP agent. `[MCP/Skill]`.
+  Reviews/GBP agent. `[MCP/Skill]`. *v2 note: the `social-scheduler` skill exists; v2 defers
+  multi-platform social automation, so it runs as "basics" only until retention is proven.*
 - **SEO/Content agent** — publishes via the chosen **adapter**; E-E-A-T guardrails (inject real
   local data); 5–8 genuinely-unique markets, not templated mass pages (>80% doorway de-rank)
   **[MR §6, §7]**.
@@ -128,6 +144,22 @@ Supervisor (orchestrator role)
 
 A failed worker returns an error summary without killing siblings (error isolation).
 Concurrency capped by `delegation.max_concurrent_children`.
+
+**Narrowed production topology (v2).** The roster above is the full leverage map; the
+*production* topology for v2 is narrowed to four workers + Supervisor, with the rest deferred:
+
+| Agent | Scope in v2 | Allowed actions (tool-permission scope) |
+|-------|-------------|------------------------------------------|
+| **Supervisor** | route, enforce policy, manage approvals, compile reports — **never directly mutates external systems** | delegation, clarify, reporting |
+| **Lead-Response** | inbound forms / missed-call text-back / LSA / qualification / booking | SMS+email, CRM create/update — **no website or CRM-schema edits** |
+| **Reputation** | review requests + AI-assisted replies + negative-review escalation | review replies/requests — **negative replies require approval** |
+| **GBP** | profile posts, Q&A, category/service audits | GBP posting only — **no autonomous business-detail edits** |
+| **Content** | localized blog/news drafts via the adapter | CMS publish to blog/news + approved landing pages + metadata — **cannot redesign pages, alter nav, or overwrite the homepage** |
+
+Deferred (until retention + operational stability are proven): autonomous **ad management**,
+**multi-platform social automation**, advanced website **rebuilding**, fully autonomous
+outbound, recursive agent swarms. **No worker gets unrestricted `terminal`/admin in
+production** — see the tool-permission scopes in §12.
 
 ## 7. Data flows
 
@@ -244,4 +276,48 @@ it's a config migration, not a re-architecture.
 | Client-owned API keys | per-profile `.env` |
 | Live demo view | `hermes dashboard` + `hermes logs --follow` |
 | Runaway protection | cron 3-min interrupt + `iteration_budget` |
-```
+
+## 12. Operational governance layer
+
+A first-class concern in v2 — the mechanism that makes constraint-first real. Partly built
+(dedup/idempotency already in our skills), partly net-new (execution plans, audit log,
+rollback). Tracked as a backlog epic with honest effort tags.
+
+- **Execution plans before mutations.** Before changing an external system, the agent emits a
+  structured plan that is logged, validated, and optionally approved before execution:
+  ```json
+  {"intent":"update_blog_post","target":"/blog/summer-fence-maintenance",
+   "actions":["update title","replace CTA","publish metadata"]}
+  ```
+- **Tool-permission scopes.** Each worker is restricted to the tools its job needs (see the §6
+  table). **No worker receives unrestricted `terminal`/admin access in production.** In Hermes
+  terms: per-profile/per-agent toolset enablement + delegation leaf roles.
+- **Idempotency.** Every external action carries a unique execution id + dedup check + retry-safe
+  semantics — prevents duplicate SMS, duplicate review requests, repeated CRM writes. *(Already
+  practiced: `seen.json` / `posted.json` / `used.json` and slug-collision guards in the built
+  skills.)*
+- **Audit logging.** Every mutation records timestamp, agent, tool, input/output payloads,
+  approval state, and a rollback reference. Append-only.
+- **Rollback.** Snapshot prior state before a CMS mutation; retain a version; allow one-click
+  revert — covers accidental overwrites, malformed content, hallucinated edits. *Adapter-specific:*
+  for `astro-git`, git revert IS the rollback; for `wordpress-rest`, snapshot the post first.
+
+This layer is what lets a constrained Content/Website agent safely touch a client's live site —
+it backs the approval guard already shown in data flow §7-B.
+
+## 13. Observability
+
+Operational visibility is mandatory in v2 — agent systems without it become unmaintainable.
+Required surfaces (built on `hermes dashboard` + `hermes logs` + the audit log above):
+
+- execution timeline · approval queue · message replay
+- lead tracking · error monitoring · tool-execution logs · cost tracking
+
+## 14. Reconciliation note
+
+This document is the canonical architecture. `REVISION.md` was the v2 proposal that has now
+been folded in here (positioning §1, narrowed topology §6, governance §12, observability §13,
+adapter priority §3). Where v2 and the prior roster differed, v2 wins on **sequencing**
+(next builds = lead-response + `wordpress-rest`/`proxy-subdir` adapters + governance), while the
+already-built skills are retained: `astro-git` as the greenfield fallback, `social-scheduler`
+as parked "basics."
