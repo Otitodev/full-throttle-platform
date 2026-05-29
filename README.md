@@ -1,5 +1,8 @@
 # Full Throttle Platform
 
+[![CI](https://github.com/Otitodev/full-throttle-platform/actions/workflows/ci.yml/badge.svg)](https://github.com/Otitodev/full-throttle-platform/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Platform tooling for the Full Throttle Marketing autonomous agent system, built on
 [Hermes Agent](https://github.com/NousResearch/hermes-agent). This repo holds the
 **platform layer** — kept separate from both the Hermes framework and any client site.
