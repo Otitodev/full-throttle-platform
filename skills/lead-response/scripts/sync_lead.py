@@ -17,7 +17,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from _common import add_adapter_args, build_adapter, fail
+from _common import add_adapter_args, audit, build_adapter, fail
 from adapters.base import Lead, lead_fingerprint
 
 
@@ -44,6 +44,8 @@ def main() -> None:
     try:
         adapter = build_adapter(args)
         result = adapter.sync_lead(lead)
+        audit("lead-response", action="crm_sync", target=lead.phone or lead.email,
+              status="ok", rollback_ref=result.get("lead_id") or lead.id)
         print(json.dumps({"success": True, **result}))
     except Exception as exc:
         fail(f"{type(exc).__name__}: {exc}")

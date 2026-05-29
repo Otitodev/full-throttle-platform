@@ -32,6 +32,9 @@ fallback, `_common.py`, JSON-to-stdout scripts, HERMES_HOME-aware state, no Herm
 - **review-automation** — post-job review requests + AI-drafted review replies (GBP / manual adapters).
 - **social-scheduler** — schedule real photos + recycled reviews to GBP/Facebook/Nextdoor (basics).
 - **lead-response** — instant first-touch to inbound web-form leads + CRM sync (Jobber / manual).
+- **governance** — the guardrail layer: per-client audit log of every mutation, execution
+  plans + approval gating, rollback, a status/timeline view, and the tool-permission scope
+  matrix. The four skills above auto-append to its audit log.
 
 Each lives under `skills/<name>/` with `SKILL.md` + `scripts/` + `references/`.
 
