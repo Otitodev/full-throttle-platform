@@ -1,20 +1,31 @@
-# Secrets & runtime state — never commit
-.env
-.env.*
-*.key
-auth.json
-secrets.json
-*-secrets.json
-# (secrets.example.json is a committed template — not ignored)
-
 # Python
 __pycache__/
 *.py[cod]
+*.egg-info/
+dist/
+build/
 .venv/
 venv/
+*.egg
 
-# OS / editor
-.DS_Store
-Thumbs.db
+# Secrets and env
+.env
+secrets.json
+*.secret
+
+# IDE
 .vscode/
 .idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Hermes runtime profiles
+~/.hermes/profiles/
+profiles/
+
+# Node (if added later)
+node_modules/
