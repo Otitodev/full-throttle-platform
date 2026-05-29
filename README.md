@@ -24,10 +24,16 @@ Platform tooling for the Full Throttle Marketing autonomous agent system, built 
 
 ## Skills
 
-### seo-blog-publisher
-Writes an SEO blog post as Markdown into a client's Astro `blog` collection and
-optionally git-commits it (which triggers the client's Vercel rebuild). See
-`skills/seo-blog-publisher/SKILL.md`.
+All skills follow the same shape (a `PublishAdapter`-style provider layer with a `manual`
+fallback, `_common.py`, JSON-to-stdout scripts, HERMES_HOME-aware state, no Hermes imports).
+
+- **content-publisher** — publish a blog post via an adapter: `astro-git` (greenfield),
+  `wordpress-rest`, `proxy-subdir` (Cloudflare Worker @ `client.com/blog`), or `manual`.
+- **review-automation** — post-job review requests + AI-drafted review replies (GBP / manual adapters).
+- **social-scheduler** — schedule real photos + recycled reviews to GBP/Facebook/Nextdoor (basics).
+- **lead-response** — instant first-touch to inbound web-form leads + CRM sync (Jobber / manual).
+
+Each lives under `skills/<name>/` with `SKILL.md` + `scripts/` + `references/`.
 
 ## Installing a skill into a profile
 

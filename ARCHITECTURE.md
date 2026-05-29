@@ -45,21 +45,21 @@ Onboarding captures a `site_type` and picks a mode. Most clients are **Augment**
 ## 3. Publishing-adapter abstraction
 
 Replaces the old hardcoded "git commit to Astro" assumption. A skill writes content; an
-**adapter** decides how it lands on the client's surface. The adapter is chosen per client and
-recorded in their profile.
+**adapter** decides how it lands on the client's surface. All adapters live in the unified
+**`content-publisher`** skill; the adapter is chosen per client and recorded in their profile.
 
 | Adapter | Target | Priority / status |
 |---------|--------|-------------------|
-| `wordpress-rest` | WordPress REST API | **v2 primary** — most common contractor CMS. *(to build)* |
-| `proxy-subdir` | Content on our infra, served at `client.com/blog` via **Cloudflare Workers reverse proxy** | **v2 primary** — SEO-equity wedge; subdirectory beats subdomain, no migration **[MR §11]**. *(to build)* |
-| `astro-git` | Greenfield Astro repo | **Built** (`seo-blog-publisher`), but now the *deferred greenfield* adapter — fallback only, for site-less/broken-site clients. |
+| `wordpress-rest` | WordPress REST API (Application Passwords) | **v2 primary** — most common contractor CMS. ✅ built |
+| `proxy-subdir` | Astro blog we host, served at `client.com/blog` via **Cloudflare Workers reverse proxy** | **v2 primary** — SEO-equity wedge; subdirectory beats subdomain, no migration **[MR §11]**. ✅ built (Worker is one-time infra) |
+| `astro-git` | Greenfield Astro repo | ✅ built — the *greenfield fallback*, for site-less/broken-site clients. |
+| `manual` | Outbox file (md + HTML) | ✅ built — fallback when no target is wired. |
 | `wix-data` | Wix Data / CMS API | Deferred until demand. |
 | `webhook` | Any system accepting a webhook | Deferred until demand. |
 
 **v2 priority (reconciled with REVISION.md):** the two adapters that serve the augment-first
-default — `wordpress-rest` and `proxy-subdir` — are what we build next. `astro-git` is already
-built but is the *greenfield fallback*; `wix-data` and `webhook` are deferred until a client
-needs them.
+default — `wordpress-rest` and `proxy-subdir` — are built (in `content-publisher`). `astro-git`
+is the *greenfield fallback*; `wix-data` and `webhook` are deferred until a client needs them.
 
 ## 4. Static picture — three repos, one runtime
 
