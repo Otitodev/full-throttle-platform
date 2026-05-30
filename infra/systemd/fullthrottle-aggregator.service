@@ -1,0 +1,28 @@
+[Unit]
+Description=Full Throttle Aggregator (dashboard API)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hermes
+Group=hermes
+WorkingDirectory=/srv/full-throttle-platform
+Environment=FT_PROFILES_ROOT=/home/hermes/.hermes/profiles
+ExecStart=/srv/full-throttle-platform/aggregator/.venv/bin/python -m aggregator.app
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+# Light hardening. The aggregator is read-only by design (sqlite mode=ro,
+# PRAGMA query_only); the platform audit log it appends to lives one level
+# above PROFILES_ROOT, so we expose that parent dir read-write.
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/hermes/.hermes
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,42 @@
+# Caddy fragment for the admin dashboard subdomain. install_server.sh copies
+# this to /etc/full-throttle/caddy.d/aggregator-admin.caddy and substitutes the
+# real domain. Basicauth credentials come from /etc/full-throttle/.admin-password.hash
+# (one entry: user=admin, hash from `caddy hash-password`).
+#
+# DNS: an A record `admin.<your-domain>` → droplet IP must already exist.
+# (For first runs you can also use admin.<ip>.nip.io.)
+#
+# Phase 0 only provisions /api/admin/* + /healthz. The SPA root + try_files
+# come later (Task 1.9).
+
+admin.ft.example.com {
+	# /healthz answered directly by Caddy so liveness probes don't hit Python.
+	respond /healthz "ok" 200
+
+	# All admin endpoints are basicauth-gated. The aggregator binds only
+	# 127.0.0.1 so this is the single entrypoint.
+	basicauth /api/admin/* {
+		admin {$FT_ADMIN_PASSWORD_HASH}
+	}
+
+	handle /api/admin/* {
+		reverse_proxy 127.0.0.1:9201
+	}
+
+	# Phase 1 task 1.9 fills in the SPA root + try_files:
+	# root * /srv/full-throttle-platform/dashboards/admin/dist
+	# try_files {path} /index.html
+	# file_server
+
+	request_body {
+		max_size 1MB
+	}
+
+	log {
+		output file /var/log/full-throttle/admin-access.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+		format json
+	}
+}
