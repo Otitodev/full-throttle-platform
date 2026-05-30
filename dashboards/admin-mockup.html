@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Throttle — Admin Dashboard (Mockup)</title>
+<style>
+  :root {
+    --bg: #041c1c;
+    --mid: #ffe6cb;
+    --radius: 0.5rem;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--mid);
+    font-family: var(--font-sans);
+    font-size: 0.80rem;
+    line-height: 1.55;
+    min-height: 100vh;
+    position: relative;
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+    opacity: 0.10;
+    background: repeating-conic-gradient(currentColor 0% 25%, transparent 0% 50%) 0 0 / 2px 2px;
+  }
+  .vignette {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse at 0% 0%, rgba(255,189,56,0.30) 0%, transparent 55%),
+      radial-gradient(ellipse at 100% 100%, rgba(255,189,56,0.12) 0%, transparent 45%);
+    mix-blend-mode: lighten; opacity: 0.20;
+  }
+  .app { position: relative; z-index: 1; max-width: 1300px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mid) 10%, transparent);
+    margin-bottom: 1.5rem;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 0.75rem; }
+  .logo { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .logo span { opacity: 0.45; }
+  .badge {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    padding: 0.15rem 0.5rem;
+    border: 1px solid color-mix(in srgb, var(--mid) 12%, transparent);
+    border-radius: calc(var(--radius) * 0.4);
+    opacity: 0.6;
+  }
+  .badge.green { border-color: color-mix(in srgb, #4ade80 25%, transparent); color: #4ade80; }
+  .badge.yellow { border-color: color-mix(in srgb, #facc15 25%, transparent); color: #facc15; }
+  .badge.red { border-color: color-mix(in srgb, #f87171 25%, transparent); color: #f87171; }
+  .utc-clock { font-family: var(--font-mono); font-size: 0.6rem; opacity: 0.45; }
+  .rec { display: flex; align-items: center; gap: 0.3rem; font-family: var(--font-mono); font-size: 0.58rem; opacity: 0.55; }
+  .rec::before { content: ''; width: 5px; height: 5px; background: var(--mid); border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+  /* Aggregate stats */
+  .agg-row {
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: color-mix(in srgb, var(--mid) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mid) 8%, transparent);
+    border-radius: var(--radius); overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .agg-stat { background: color-mix(in srgb, var(--mid) 2%, var(--bg)); padding: 0.9rem 1.1rem; }
+  .agg-label { font-family: var(--font-mono); font-size: 0.56rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.45; margin-bottom: 0.15rem; }
+  .agg-value { font-size: 1.4rem; font-weight: 700; letter-spacing: -0.02em; }
+
+  .sec-label {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    opacity: 0.45; display: flex; align-items: center; gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .sec-label::after { content: ''; flex: 1; height: 1px; background: color-mix(in srgb, var(--mid) 10%, transparent); }
+
+  .grid-main { display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+  .grid-1 { display: grid; grid-template-columns: 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+
+  .card {
+    border: 1px solid color-mix(in srgb, var(--mid) 8%, transparent);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--mid) 2%, var(--bg));
+    position: relative; overflow: hidden;
+  }
+  .card-header {
+    padding: 0.65rem 1rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mid) 6%, transparent);
+    font-family: var(--font-mono); font-size: 0.6rem;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-body { padding: 0.5rem 1rem; }
+
+  .cm { position: absolute; width: 10px; height: 10px; opacity: 0.25; }
+  .cm::before, .cm::after { content: ''; position: absolute; background: var(--mid); }
+  .cm::before { width: 100%; height: 1px; top: 50%; transform: translateY(-50%); }
+  .cm::after { height: 100%; width: 1px; left: 50%; transform: translateX(-50%); }
+  .cm-tl { top: 4px; left: 4px; } .cm-tr { top: 4px; right: 4px; }
+  .cm-bl { bottom: 4px; left: 4px; } .cm-br { bottom: 4px; right: 4px; }
+
+  /* Client table */
+  .client-table { width: 100%; border-collapse: collapse; }
+  .client-table th {
+    text-align: left; font-family: var(--font-mono); font-size: 0.56rem;
+    text-transform: uppercase; letter-spacing: 0.05em; opacity: 0.4;
+    padding: 0.5rem 0.65rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mid) 8%, transparent);
+  }
+  .client-table td {
+    padding: 0.55rem 0.65rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mid) 4%, transparent);
+    font-size: 0.78rem;
+  }
+  .client-table tr:hover td { background: color-mix(in srgb, var(--mid) 2%, transparent); }
+  .client-name { font-weight: 600; display: flex; align-items: center; gap: 0.5rem; }
+  .client-domain { font-family: var(--font-mono); font-size: 0.6rem; opacity: 0.35; }
+  .client-slug { font-family: var(--font-mono); font-size: 0.58rem; opacity: 0.35; }
+  .metric { font-family: var(--font-mono); font-size: 0.7rem; }
+  .metric.good { color: #4ade80; }
+
+  /* Approval queue */
+  .queue-item {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--mid) 4%, transparent);
+    font-size: 0.78rem;
+  }
+  .queue-item:last-child { border-bottom: none; }
+  .queue-client { font-family: var(--font-mono); font-size: 0.55rem; opacity: 0.4; min-width: 4.5rem; padding-top: 0.1rem; }
+  .queue-detail { flex: 1; }
+  .queue-detail strong { display: block; }
+  .queue-detail span { font-size: 0.68rem; opacity: 0.45; }
+  .queue-age { font-family: var(--font-mono); font-size: 0.55rem; opacity: 0.4; white-space: nowrap; }
+
+  /* Audit trail */
+  .audit-item {
+    display: flex; gap: 0.6rem; padding: 0.35rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--mid) 3%, transparent);
+    font-size: 0.73rem;
+    align-items: center;
+  }
+  .audit-item:last-child { border-bottom: none; }
+  .audit-time { font-family: var(--font-mono); font-size: 0.56rem; opacity: 0.35; min-width: 4rem; }
+  .audit-client { font-family: var(--font-mono); font-size: 0.55rem; opacity: 0.35; min-width: 4rem; }
+  .audit-skill {
+    font-family: var(--font-mono); font-size: 0.53rem;
+    padding: 0.08rem 0.3rem; border-radius: calc(var(--radius) * 0.35);
+    border: 1px solid color-mix(in srgb, var(--mid) 7%, transparent);
+    opacity: 0.5; white-space: nowrap;
+  }
+  .audit-action { flex: 1; }
+
+  /* Health dots */
+  .dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-right: 0.3rem; }
+  .dot.green { background: #4ade80; }
+  .dot.yellow { background: #facc15; }
+  .dot.red { background: #f87171; }
+
+  .footer {
+    margin-top: 2rem; padding-top: 1rem;
+    border-top: 1px solid color-mix(in srgb, var(--mid) 8%, transparent);
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 0.55rem; opacity: 0.3;
+  }
+</style>
+</head>
+<body>
+<div class="vignette"></div>
+<div class="app">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo">Full<span>Throttle</span></div>
+      <div class="badge green">OPERATOR</div>
+      <div class="rec">REC</div>
+    </div>
+    <div class="utc-clock" id="clock"></div>
+  </div>
+
+  <!-- Aggregate stats across all clients -->
+  <div class="sec-label">Platform Overview</div>
+  <div class="agg-row">
+    <div class="agg-stat"><div class="agg-label">Active Clients</div><div class="agg-value">7</div></div>
+    <div class="agg-stat"><div class="agg-label">Total Leads (mo)</div><div class="agg-value">143</div></div>
+    <div class="agg-stat"><div class="agg-label">Avg Response</div><div class="agg-value">22s</div></div>
+    <div class="agg-stat"><div class="agg-label">Approvals Pending</div><div class="agg-value">4</div></div>
+    <div class="agg-stat"><div class="agg-label">Mutations (24h)</div><div class="agg-value">38</div></div>
+  </div>
+
+  <!-- Main: Client list + Sidebar -->
+  <div class="grid-main">
+    <!-- Client list -->
+    <div class="card">
+      <span class="cm cm-tl"></span><span class="cm cm-tr"></span><span class="cm cm-bl"></span><span class="cm cm-br"></span>
+      <div class="card-header">Clients <span style="opacity:0.4">7 active · sorted by activity</span></div>
+      <div class="card-body" style="padding:0">
+        <table class="client-table">
+          <thead>
+            <tr><th>Client</th><th>Leads (7d)</th><th>Response</th><th>Reviews</th><th>Content</th><th>Gateway</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><div class="client-name"><span class="dot green"></span> Mr. Fence<div class="client-slug">mrfence</div></div><div class="client-domain">mrfence.com · Augment (WP)</div></td>
+              <td class="metric good">12</td><td class="metric">18s</td><td class="metric">3 new</td><td class="metric">2 pub</td><td><span class="badge green">LIVE</span></td>
+            </tr>
+            <tr>
+              <td><div class="client-name"><span class="dot green"></span> Austin Gate Co<div class="client-slug">austingate</div></div><div class="client-domain">austingateco.com · Augment (Proxy)</div></td>
+              <td class="metric good">8</td><td class="metric">31s</td><td class="metric">1 new</td><td class="metric">1 pub</td><td><span class="badge green">LIVE</span></td>
+            </tr>
+            <tr>
+              <td><div class="client-name"><span class="dot green"></span> Premier Deck &amp; Rail<div class="client-slug">premierdeck</div></div><div class="client-domain">premierdeckatx.com · Augment (WP)</div></td>
+              <td class="metric">6</td><td class="metric">24s</td><td class="metric">0 new</td><td class="metric">3 pub</td><td><span class="badge green">LIVE</span></td>
+            </tr>
+            <tr>
+              <td><div class="client-name"><span class="dot yellow"></span> Hill Country Fence<div class="client-slug">hillcountry</div></div><div class="client-domain">hillcountryfence.com · Greenfield</div></td>
+              <td class="metric">4</td><td class="metric">45s</td><td class="metric">2 new</td><td class="metric">0 pub</td><td><span class="badge yellow">DEGRADED</span></td>
+            </tr>
+            <tr>
+              <td><div class="client-name"><span class="dot green"></span> Lone Star Ironworks<div class="client-slug">lonestariron</div></div><div class="client-domain">lonestariron.com · Augment (WP)</div></td>
+              <td class="metric">3</td><td class="metric">19s</td><td class="metric">1 new</td><td class="metric">1 pub</td><td><span class="badge green">LIVE</span></td>
+            </tr>
+            <tr>
+              <td><div class="client-name"><span class="dot green"></span> Capital Outdoor Living<div class="client-slug">capitaloutdoor</div></div><div class="client-domain">capitaloutdoor.com · Augment (Proxy)</div></td>
+              <td class="metric">5</td><td class="metric">27s</td><td class="metric">0 new</td><td class="metric">2 pub</td><td><span class="badge green">LIVE</span></td>
+            </tr>
+            <tr>
+              <td><div class="client-name"><span class="dot red"></span> Demo Fence Company<div class="client-slug">demo-fence-company</div></div><div class="client-domain">— · Onboarding</div></td>
+              <td class="metric">—</td><td class="metric">—</td><td class="metric">—</td><td class="metric">—</td><td><span class="badge red">OFFLINE</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Sidebar: Approvals + Audit -->
+    <div>
+      <div class="card" style="margin-bottom:1rem">
+        <span class="cm cm-tl"></span><span class="cm cm-tr"></span><span class="cm cm-bl"></span><span class="cm cm-br"></span>
+        <div class="card-header">Approval Queue <span style="opacity:0.4">4 pending</span></div>
+        <div class="card-body">
+          <div class="queue-item">
+            <div class="queue-client">mrfence</div>
+            <div class="queue-detail"><strong>Reply to negative review</strong><span>Google · "Over budget and late" · Mike R.</span></div>
+            <div class="queue-age">2h ago</div>
+          </div>
+          <div class="queue-item">
+            <div class="queue-client">austingate</div>
+            <div class="queue-detail"><strong>Publish blog: "Gate Automation Guide"</strong><span>Draft · 4 photos · SEO +8%</span></div>
+            <div class="queue-age">5h ago</div>
+          </div>
+          <div class="queue-item">
+            <div class="queue-client">premierdeck</div>
+            <div class="queue-detail"><strong>Deploy homepage banner update</strong><span>Summer promo · replaces hero image</span></div>
+            <div class="queue-age">1d ago</div>
+          </div>
+          <div class="queue-item">
+            <div class="queue-client">hillcountry</div>
+            <div class="queue-detail"><strong>Publish GBP service-area update</strong><span>Adds 2 new service zip codes</span></div>
+            <div class="queue-age">1d ago</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <span class="cm cm-tl"></span><span class="cm cm-tr"></span><span class="cm cm-bl"></span><span class="cm cm-br"></span>
+        <div class="card-header">Audit Trail <span style="opacity:0.4">last 24h</span></div>
+        <div class="card-body">
+          <div class="audit-item">
+            <span class="audit-time">05:22 UTC</span><span class="audit-client">mrfence</span><span class="audit-skill">lead-resp</span><span class="audit-action">Auto-replied SMS to (512) 555-0199</span>
+          </div>
+          <div class="audit-item">
+            <span class="audit-time">04:45 UTC</span><span class="audit-client">austingate</span><span class="audit-skill">content</span><span class="audit-action">Published to /blog/gate-automation (WP REST)</span>
+          </div>
+          <div class="audit-item">
+            <span class="audit-time">03:10 UTC</span><span class="audit-client">premierdeck</span><span class="audit-skill">reputation</span><span class="audit-action">Replied to Google review ★★★★★ (auto)</span>
+          </div>
+          <div class="audit-item">
+            <span class="audit-time">02:30 UTC</span><span class="audit-client">mrfence</span><span class="audit-skill">content</span><span class="audit-action">Published GBP post: "Memorial Day special"</span>
+          </div>
+          <div class="audit-item">
+            <span class="audit-time">01:00 UTC</span><span class="audit-client">lonestariron</span><span class="audit-skill">reputation</span><span class="audit-action">Sent 2 post-job review requests</span>
+          </div>
+          <div class="audit-item">
+            <span class="audit-time">00:15 UTC</span><span class="audit-client">hillcountry</span><span class="audit-skill">governance</span><span class="audit-action">Rollback: reverted blog post (bad slug)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Full Throttle Platform · Operator Dashboard</span>
+    <span>7 gateways · 38 mutations/24h · $12.40 today</span>
+  </div>
+
+</div>
+<script>
+  const c=document.getElementById('clock');
+  function t(){c.textContent=new Date().toISOString().slice(11,19)+' UTC';}
+  t();setInterval(t,1000);
+</script>
+</body>
+</html>

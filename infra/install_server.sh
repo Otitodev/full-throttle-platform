@@ -78,6 +78,14 @@ step_user() {
   fi
 }
 
+step_hermes_deps() {
+  # Pre-install packages the Hermes installer would otherwise ask the hermes
+  # user to sudo-install.  The hermes user has no password, so those sudo
+  # prompts fail.  Installing them as root ahead of time avoids the problem.
+  log "pre-installing Hermes deps (ripgrep, ffmpeg, build tools)"
+  apt_install ripgrep ffmpeg build-essential python3-dev libffi-dev
+}
+
 step_hermes() {
   if sudo -u hermes -i bash -c 'command -v hermes >/dev/null 2>&1'; then
     ok "hermes binary already installed"; return
@@ -148,6 +156,7 @@ step_apt_base
 step_node
 step_caddy
 step_user
+step_hermes_deps
 step_hermes
 step_dirs
 step_caddyfile

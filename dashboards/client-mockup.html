@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Full Throttle — Client Dashboard (Mockup)</title>
+<style>
+  :root {
+    --bg: #041c1c;
+    --mid: #ffe6cb;
+    --radius: 0.5rem;
+    --font-sans: 'Inter', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--mid);
+    font-family: var(--font-sans);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    min-height: 100vh;
+    position: relative;
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+    opacity: 0.10;
+    background: repeating-conic-gradient(currentColor 0% 25%, transparent 0% 50%) 0 0 / 2px 2px;
+  }
+  .vignette {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background:
+      radial-gradient(ellipse at 0% 0%, rgba(255,189,56,0.30) 0%, transparent 55%),
+      radial-gradient(ellipse at 100% 100%, rgba(255,189,56,0.12) 0%, transparent 45%);
+    mix-blend-mode: lighten; opacity: 0.20;
+  }
+  .app { position: relative; z-index: 1; max-width: 1200px; margin: 0 auto; padding: 1.5rem 2rem; }
+
+  .topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mid) 10%, transparent);
+    margin-bottom: 1.5rem;
+  }
+  .topbar-left { display: flex; align-items: center; gap: 0.75rem; }
+  .logo { font-family: var(--font-mono); font-size: 0.7rem; letter-spacing: 0.08em; text-transform: uppercase; }
+  .logo span { opacity: 0.45; }
+  .client-badge {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    padding: 0.2rem 0.55rem;
+    border: 1px solid color-mix(in srgb, var(--mid) 15%, transparent);
+    border-radius: calc(var(--radius) * 0.5);
+    background: color-mix(in srgb, var(--mid) 3%, var(--bg));
+  }
+  .utc-clock { font-family: var(--font-mono); font-size: 0.6rem; opacity: 0.45; }
+  .rec { display: flex; align-items: center; gap: 0.3rem; font-family: var(--font-mono); font-size: 0.58rem; opacity: 0.55; }
+  .rec::before { content: ''; width: 5px; height: 5px; background: var(--mid); border-radius: 50%; animation: pulse 1.5s ease-in-out infinite; }
+  @keyframes pulse { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+  .stats-row {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: color-mix(in srgb, var(--mid) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--mid) 8%, transparent);
+    border-radius: var(--radius); overflow: hidden;
+    margin-bottom: 1.5rem;
+  }
+  .stat { background: color-mix(in srgb, var(--mid) 2%, var(--bg)); padding: 1rem 1.25rem; }
+  .stat-label { font-family: var(--font-mono); font-size: 0.58rem; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.45; margin-bottom: 0.2rem; }
+  .stat-value { font-size: 1.6rem; font-weight: 700; letter-spacing: -0.02em; }
+  .stat-delta { font-size: 0.65rem; opacity: 0.5; margin-top: 0.15rem; }
+  .stat-delta.up { color: #4ade80; opacity: 0.8; }
+
+  .sec-label {
+    font-family: var(--font-mono); font-size: 0.6rem;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    opacity: 0.45; display: flex; align-items: center; gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+  .sec-label::after { content: ''; flex: 1; height: 1px; background: color-mix(in srgb, var(--mid) 10%, transparent); }
+
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+
+  .card {
+    border: 1px solid color-mix(in srgb, var(--mid) 8%, transparent);
+    border-radius: var(--radius);
+    background: color-mix(in srgb, var(--mid) 2%, var(--bg));
+    position: relative; overflow: hidden;
+  }
+  .card-header {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--mid) 6%, transparent);
+    font-family: var(--font-mono); font-size: 0.6rem;
+    text-transform: uppercase; letter-spacing: 0.05em;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-body { padding: 0.75rem 1rem; }
+
+  .cm { position: absolute; width: 10px; height: 10px; opacity: 0.25; }
+  .cm::before, .cm::after { content: ''; position: absolute; background: var(--mid); }
+  .cm::before { width: 100%; height: 1px; top: 50%; transform: translateY(-50%); }
+  .cm::after { height: 100%; width: 1px; left: 50%; transform: translateX(-50%); }
+  .cm-tl { top: 4px; left: 4px; } .cm-tr { top: 4px; right: 4px; }
+  .cm-bl { bottom: 4px; left: 4px; } .cm-br { bottom: 4px; right: 4px; }
+
+  .lead-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--mid) 4%, transparent);
+  }
+  .lead-item:last-child { border-bottom: none; }
+  .lead-name { font-weight: 600; }
+  .lead-meta { font-size: 0.7rem; opacity: 0.45; }
+  .lead-status {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    padding: 0.15rem 0.45rem; border-radius: calc(var(--radius) * 0.4);
+  }
+  .status-new { background: color-mix(in srgb, #4ade80 15%, transparent); color: #4ade80; }
+  .status-qualified { background: color-mix(in srgb, #facc15 15%, transparent); color: #facc15; }
+  .status-booked { background: color-mix(in srgb, var(--mid) 12%, transparent); }
+
+  .approval-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0.5rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--mid) 4%, transparent);
+  }
+  .approval-item:last-child { border-bottom: none; }
+  .approval-action {
+    font-family: var(--font-mono); font-size: 0.58rem;
+    padding: 0.2rem 0.5rem;
+    border: 1px solid color-mix(in srgb, #facc15 30%, transparent);
+    border-radius: calc(var(--radius) * 0.4);
+    color: #facc15; background: transparent; cursor: pointer;
+  }
+
+  .content-item {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--mid) 4%, transparent);
+    display: flex; align-items: flex-start; gap: 0.75rem;
+  }
+  .content-item:last-child { border-bottom: none; }
+  .content-icon { font-family: var(--font-mono); font-size: 0.58rem; opacity: 0.4; min-width: 2.2rem; padding-top: 0.1rem; }
+  .content-title { font-weight: 600; font-size: 0.78rem; }
+  .content-url { font-size: 0.65rem; opacity: 0.4; font-family: var(--font-mono); }
+
+  .activity-item {
+    display: flex; gap: 0.6rem; padding: 0.4rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--mid) 3%, transparent);
+    font-size: 0.75rem;
+  }
+  .activity-item:last-child { border-bottom: none; }
+  .activity-time { font-family: var(--font-mono); font-size: 0.58rem; opacity: 0.35; min-width: 3.5rem; }
+  .activity-msg { flex: 1; }
+  .activity-type {
+    font-family: var(--font-mono); font-size: 0.55rem;
+    padding: 0.1rem 0.35rem; border-radius: calc(var(--radius) * 0.4);
+    border: 1px solid color-mix(in srgb, var(--mid) 8%, transparent);
+    opacity: 0.5;
+  }
+
+  .footer {
+    margin-top: 2rem; padding-top: 1rem;
+    border-top: 1px solid color-mix(in srgb, var(--mid) 8%, transparent);
+    display: flex; justify-content: space-between;
+    font-family: var(--font-mono); font-size: 0.55rem; opacity: 0.3;
+  }
+</style>
+</head>
+<body>
+<div class="vignette"></div>
+<div class="app">
+
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="logo">Full<span>Throttle</span></div>
+      <div class="client-badge">Profile: mrfence</div>
+      <div class="rec">REC</div>
+    </div>
+    <div class="utc-clock" id="clock"></div>
+  </div>
+
+  <div class="sec-label">This Week</div>
+  <div class="stats-row">
+    <div class="stat"><div class="stat-label">New Leads</div><div class="stat-value">12</div><div class="stat-delta up">+3 vs last week</div></div>
+    <div class="stat"><div class="stat-label">Avg Response</div><div class="stat-value">18s</div><div class="stat-delta up">4s faster</div></div>
+    <div class="stat"><div class="stat-label">Jobs Booked</div><div class="stat-value">5</div><div class="stat-delta up">42% conversion</div></div>
+    <div class="stat"><div class="stat-label">New Reviews</div><div class="stat-value">3</div><div class="stat-delta">+1 this week</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <span class="cm cm-tl"></span><span class="cm cm-tr"></span><span class="cm cm-bl"></span><span class="cm cm-br"></span>
+      <div class="card-header">Inbound Leads <span style="opacity:0.4">last 24h</span></div>
+      <div class="card-body">
+        <div class="lead-item"><div><div class="lead-name">Sarah Chen</div><div class="lead-meta">Privacy fence · 200ft · Website form</div></div><span class="lead-status status-booked">BOOKED</span></div>
+        <div class="lead-item"><div><div class="lead-name">Mike Torres</div><div class="lead-meta">Gate install · 2 gates · LSA</div></div><span class="lead-status status-qualified">QUALIFIED</span></div>
+        <div class="lead-item"><div><div class="lead-name">Debbie Walters</div><div class="lead-meta">Deck railing · repair · Phone</div></div><span class="lead-status status-new">NEW</span></div>
+        <div class="lead-item"><div><div class="lead-name">(555) 123-4567</div><div class="lead-meta">Missed call · auto-text sent</div></div><span class="lead-status status-new">NEW</span></div>
+      </div>
+    </div>
+    <div class="card">
+      <span class="cm cm-tl"></span><span class="cm cm-tr"></span><span class="cm cm-bl"></span><span class="cm cm-br"></span>
+      <div class="card-header">Needs Your Approval <span style="opacity:0.4">2 pending</span></div>
+      <div class="card-body">
+        <div class="approval-item"><div><div style="font-weight:600">Reply to negative review</div><div style="font-size:0.7rem;opacity:0.45">Google · Mike R. · "Over budget and late"</div></div><button class="approval-action">REVIEW</button></div>
+        <div class="approval-item"><div><div style="font-weight:600">Publish: "Spring Fence Maintenance"</div><div style="font-size:0.7rem;opacity:0.45">Draft ready · 3 photos · SEO +12%</div></div><button class="approval-action">REVIEW</button></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <span class="cm cm-tl"></span><span class="cm cm-tr"></span><span class="cm cm-bl"></span><span class="cm cm-br"></span>
+      <div class="card-header">Recently Published <span style="opacity:0.4">this week</span></div>
+      <div class="card-body">
+        <div class="content-item"><div class="content-icon">BLOG</div><div><div class="content-title">Choosing the Right Fence for Texas Weather</div><div class="content-url">mrfence.com/blog/texas-weather-fencing</div></div></div>
+        <div class="content-item"><div class="content-icon">GBP</div><div><div class="content-title">Before/After: Cedar privacy fence — Round Rock</div><div class="content-url">google.com/business/mrfence/posts/...</div></div></div>
+        <div class="content-item"><div class="content-icon">REPLY</div><div><div class="content-title">Response to: "Great work, fast and clean"</div><div class="content-url">Google review · 4&#9733; · Jennifer P.</div></div></div>
+      </div>
+    </div>
+    <div class="card">
+      <span class="cm cm-tl"></span><span class="cm cm-tr"></span><span class="cm cm-bl"></span><span class="cm cm-br"></span>
+      <div class="card-header">Activity <span style="opacity:0.4">live</span></div>
+      <div class="card-body">
+        <div class="activity-item"><span class="activity-time">05:22</span><span class="activity-msg">Auto-replied to missed call from (512) 555-0199</span><span class="activity-type">LEAD</span></div>
+        <div class="activity-item"><span class="activity-time">04:45</span><span class="activity-msg">Published GBP post: "Memorial Day gate special"</span><span class="activity-type">GBP</span></div>
+        <div class="activity-item"><span class="activity-time">03:10</span><span class="activity-msg">Drafted blog: "5 Signs Your Wood Fence Needs Replacing"</span><span class="activity-type">CONTENT</span></div>
+        <div class="activity-item"><span class="activity-time">01:00</span><span class="activity-msg">Sent review requests to 3 recent jobs</span><span class="activity-type">REVIEWS</span></div>
+        <div class="activity-item"><span class="activity-time">00:35</span><span class="activity-msg">Scheduled social post: before/after — cedar stain</span><span class="activity-type">SOCIAL</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <span>Full Throttle Platform · Client Dashboard</span>
+    <span>gateway: active · v0.15.1</span>
+  </div>
+
+</div>
+<script>
+  const c=document.getElementById('clock');
+  function t(){c.textContent=new Date().toISOString().slice(11,19)+' UTC';}
+  t();setInterval(t,1000);
+</script>
+</body>
+</html>
