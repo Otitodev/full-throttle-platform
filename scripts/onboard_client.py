@@ -159,7 +159,8 @@ def build_config(intake: dict) -> dict:
                     # collision-free; same slug always gets the same port).
                     "routes": {
                         lead_route: {
-                            "secret_env": "WEBHOOK_LEAD_SECRET",
+                            # `secret` is injected by main() from secrets.webhook_lead_secret
+                            # (Hermes reads route.secret directly; no env interpolation).
                             "skills": ["lead-response"],
                             "prompt": (
                                 "A new sales lead arrived. Use the lead-response skill: "
@@ -411,6 +412,11 @@ def main() -> None:
     suggested_host = f"{slug}.{base_domain}"
     cfg = build_config(intake)
     cfg["platforms"]["webhook"]["extra"]["port"] = port
+    lead_route = intake.get("channels", {}).get("lead_route", "lead")
+    webhook_secret = secrets.get("webhook_lead_secret")
+    if not webhook_secret:
+        die("secrets.webhook_lead_secret is required (HMAC for lead webhook)")
+    cfg["platforms"]["webhook"]["extra"]["routes"][lead_route]["secret"] = webhook_secret
     env = build_env(intake, secrets)
     hermes_present = shutil.which("hermes") is not None
     crons = cron_commands(slug, intake.get("cadence", {}))
