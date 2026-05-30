@@ -24,8 +24,15 @@ d.setdefault("model", {})
 d["model"]["provider"] = "custom"
 d["model"].setdefault("default", "gpt-4o")
 d["model"]["base_url"] = "https://api.openai.com/v1"
+# Disable reasoning. gpt-4o is not a reasoning model and rejects the
+# `include: ["reasoning.encrypted_content"]` line Hermes adds when reasoning
+# is enabled (HTTP 400). Setting effort=none → {"enabled": False} suppresses
+# the include line at the source. See hermes_constants.parse_reasoning_effort
+# and run_agent.py:3883.
+d.setdefault("agent", {})
+d["agent"]["reasoning_effort"] = "none"
 p.write_text(yaml.safe_dump(d, sort_keys=False), encoding="utf-8")
-print(d["model"])
+print({"model": d["model"], "agent.reasoning_effort": d["agent"]["reasoning_effort"]})
 PY
 
 systemctl restart hermes-gateway@mrfence
