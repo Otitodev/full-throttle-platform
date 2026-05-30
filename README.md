@@ -186,6 +186,22 @@ Default cadence (customizable via `cadence` in intake):
 | Content publishing | `0 9 * * 1` (Monday) | content-publisher |
 | Weekly report | `0 8 * * 1` (Monday) | — |
 
+### Deployment (production)
+
+A turnkey single-droplet packaging is in [`infra/`](infra/README.md): Caddy auto-TLS, subdomain
+per client (`<slug>.hooks.<domain>`), one systemd unit per gateway, and a deterministic per-client
+webhook port allocated by `onboard_client.py` (registry at `~/.hermes/ports.json`).
+
+```bash
+# On a fresh Debian/Ubuntu droplet, as root:
+sudo bash infra/install_server.sh        # one-time: Caddy + Hermes + Node + systemd unit
+python3 scripts/onboard_client.py …      # per client (as before)
+sudo bash infra/promote_client.sh <slug> --base-domain hooks.<your-domain>
+# → live at https://<slug>.hooks.<your-domain>/webhooks/lead
+```
+
+Full runbook: [`infra/README.md`](infra/README.md).
+
 ---
 
 ## Project Structure
@@ -204,6 +220,15 @@ full-throttle-platform/
 │   ├── ONBOARDING.md               ← operator runbook
 │   ├── intake.example.json         ← template (non-secret)
 │   └── secrets.example.json        ← template (secret keys)
+├── infra/                          ← deployment packaging (production)
+│   ├── README.md                   ← runbook: provision → install → onboard → promote
+│   ├── install_server.sh           ← one-shot droplet bootstrap
+│   ├── promote_client.sh           ← per-client: Caddy fragment + systemd enable
+│   ├── caddy/
+│   │   ├── Caddyfile               ← base config
+│   │   └── example-client.caddy    ← per-client fragment template
+│   └── systemd/
+│       └── hermes-gateway@.service ← templated unit (one per slug)
 ├── skills/
 │   ├── content-publisher/          ← blog publishing via adapters
 │   │   ├── SKILL.md
@@ -261,6 +286,7 @@ The `content-publisher` skill ships with pluggable adapters — chosen per clien
 - [REVISION.md](REVISION.md) — v2 proposal, design decisions, deferred scope
 - [MARKET_RESEARCH.md](MARKET_RESEARCH.md) — research citations backing design choices
 - [scripts/ONBOARDING.md](scripts/ONBOARDING.md) — operator runbook for onboarding a client
+- [infra/README.md](infra/README.md) — deployment runbook (server bootstrap, promote-to-live)
 
 ---
 

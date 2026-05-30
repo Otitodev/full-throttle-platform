@@ -314,7 +314,24 @@ Required surfaces (built on `hermes dashboard` + `hermes logs` + the audit log a
 - execution timeline · approval queue · message replay
 - lead tracking · error monitoring · tool-execution logs · cost tracking
 
-## 14. Reconciliation note
+## 14. Deployment (production packaging)
+
+Packaged in `infra/` for a single-droplet, subdomain-per-client setup (full runbook in
+`infra/README.md`):
+
+- **Caddy (auto-TLS)** in front of all gateways; one wildcard DNS record `*.hooks.<domain>`
+  covers per-subdomain HTTP-01 cert issuance.
+- **systemd template unit** `hermes-gateway@<slug>.service` — one gateway process per profile,
+  `Restart=always`, journald-logged. `ExecStart=/usr/local/bin/hermes -p %i gateway`.
+- **Deterministic port allocation** per client: a small registry at `~hermes/.hermes/ports.json`
+  records `slug → port` (range 8645–9644). Hash chooses the starting probe; collisions are
+  resolved by probing forward — idempotent on re-onboard, zero collisions.
+- Flow: `install_server.sh` (one-time bootstrap) → `scripts/onboard_client.py` (per client) →
+  `infra/promote_client.sh <slug>` (drops Caddy fragment + enables the systemd unit) → live at
+  `https://<slug>.hooks.<domain>/webhooks/lead`.
+- Scale-out beyond ~30 clients = migrate to kanban dispatcher + worker fleet (§10), no rewrite.
+
+## 15. Reconciliation note
 
 This document is the canonical architecture. `REVISION.md` was the v2 proposal that has now
 been folded in here (positioning §1, narrowed topology §6, governance §12, observability §13,

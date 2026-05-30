@@ -1,0 +1,29 @@
+[Unit]
+Description=Full Throttle Hermes gateway for client %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=hermes
+Group=hermes
+# Per-client profile is selected by the systemd instance name (%i = <slug>).
+# HERMES_HOME stays at the user default (~/.hermes) so all profiles live under
+# /home/hermes/.hermes/profiles/<slug>/ as the rest of the platform expects.
+WorkingDirectory=/home/hermes
+ExecStart=/usr/local/bin/hermes -p %i gateway
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hermes-gateway-%i
+
+# Light hardening (the agent still needs broad fs+net access).
+NoNewPrivileges=true
+ProtectSystem=full
+ProtectHome=read-only
+ReadWritePaths=/home/hermes/.hermes /var/log/full-throttle
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

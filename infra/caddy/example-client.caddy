@@ -1,0 +1,28 @@
+# Example per-client fragment. promote_client.sh writes one of these per slug
+# at /etc/full-throttle/caddy.d/<slug>.caddy and reloads Caddy.
+#
+# DNS: a wildcard A record `*.hooks.<your-domain>` → droplet IP must already exist.
+# Caddy will auto-provision a TLS cert for the subdomain on first request.
+
+mrfence.hooks.example.com {
+	# Each client's Hermes gateway listens on its own deterministic port
+	# (8645 + sha256(slug) % 300), recorded in <profile>/config.yaml under
+	# platforms.webhook.extra.port.
+	reverse_proxy 127.0.0.1:8723
+
+	# Useful for operator probes; everything else is the gateway's job.
+	respond /healthz "ok" 200
+
+	# Keep request bodies reasonable — webhook leads are tiny.
+	request_body {
+		max_size 1MB
+	}
+
+	log {
+		output file /var/log/full-throttle/mrfence-access.log {
+			roll_size 10mb
+			roll_keep 5
+		}
+		format json
+	}
+}

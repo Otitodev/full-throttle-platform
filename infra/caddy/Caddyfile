@@ -1,0 +1,16 @@
+# Full Throttle Caddyfile — base config.
+#
+# Per-client subdomain blocks are dropped into /etc/full-throttle/caddy.d/<slug>.caddy
+# by promote_client.sh; this file just imports them. One wildcard A record
+# (*.hooks.<domain> → droplet IP) covers DNS; Caddy auto-provisions per-subdomain
+# certs via HTTP-01 as each client is promoted.
+
+{
+	# Replace before running in production.
+	email ops@example.com
+	# Use Let's Encrypt prod; staging endpoint is commented for cert-debugging:
+	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
+}
+
+# Per-client subdomain blocks land here.
+import /etc/full-throttle/caddy.d/*.caddy

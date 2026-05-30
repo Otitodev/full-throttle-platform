@@ -17,6 +17,7 @@ pyyaml; no Hermes imports.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -92,6 +93,42 @@ def validate(intake: dict) -> None:
             die("site.mode=greenfield requires site.repo_dest (where to create the client site repo)")
 
 
+PORT_BASE = 8645
+PORT_SPAN = 1000   # 8645..9644 — comfortably more than the planned client count
+
+
+def allocate_port(slug: str, profiles_root: Path) -> int:
+    """Allocate a unique webhook port per client and persist the mapping.
+
+    Hash-only allocation collides quickly (birthday paradox: ~25 clients with a
+    300-port range is already >50% likely to collide). So we keep a small
+    registry file `<HERMES_HOME>/ports.json` next to `profiles/`. The slug's
+    hash chooses the *starting point*, then we probe forward until we find a
+    free port — same slug always gets the same port (idempotent re-onboarding),
+    and we never assign two clients the same port.
+    """
+    home = profiles_root.parent
+    reg_path = home / "ports.json"
+    reg: dict = {}
+    if reg_path.is_file():
+        try:
+            reg = json.loads(reg_path.read_text(encoding="utf-8"))
+        except json.JSONDecodeError:
+            reg = {}
+    if slug in reg:
+        return int(reg[slug])
+    used = set(int(v) for v in reg.values())
+    start_offset = int(hashlib.sha256(slug.encode("utf-8")).hexdigest(), 16) % PORT_SPAN
+    for i in range(PORT_SPAN):
+        cand = PORT_BASE + (start_offset + i) % PORT_SPAN
+        if cand not in used:
+            reg[slug] = cand
+            reg_path.parent.mkdir(parents=True, exist_ok=True)
+            reg_path.write_text(json.dumps(reg, indent=2, sort_keys=True), encoding="utf-8")
+            return cand
+    raise RuntimeError(f"no free port in {PORT_BASE}..{PORT_BASE + PORT_SPAN - 1}")
+
+
 def build_config(intake: dict) -> dict:
     """Partial config.yaml — deep-merged with Hermes DEFAULT_CONFIG at load."""
     client = intake["client"]
@@ -114,6 +151,8 @@ def build_config(intake: dict) -> dict:
         "platforms": {
             "webhook": {
                 "extra": {
+                    # `port` is injected by main() after allocate_port() (registry-based,
+                    # collision-free; same slug always gets the same port).
                     "routes": {
                         lead_route: {
                             "secret_env": "WEBHOOK_LEAD_SECRET",
@@ -290,14 +329,15 @@ def cron_commands(slug: str, cadence: dict) -> list[str]:
     ]
 
 
-def next_steps_md(slug: str, intake: dict, crons: list[str], hermes_present: bool) -> str:
+def next_steps_md(slug: str, intake: dict, crons: list[str], hermes_present: bool,
+                  port: int, suggested_host: str) -> str:
     site = intake["site"]
     mode = site.get("mode", "augment")
     lines = [f"# Next steps — {intake['client']['business_name']} ({slug})", ""]
     lines.append("Manual steps the onboarding script can't do offline:\n")
     lines.append("1. Provision/assign a Twilio number for the owner and confirm inbound routing.")
-    lines.append("2. Point the client's website lead form at the gateway webhook:")
-    lines.append("   `https://<your-host>/webhooks/lead` (HMAC = WEBHOOK_LEAD_SECRET).")
+    lines.append(f"2. Point the client's website lead form at the gateway webhook:")
+    lines.append(f"   `https://{suggested_host}/webhooks/lead` (HMAC = WEBHOOK_LEAD_SECRET).")
     if mode == "greenfield":
         lines.append(f"3. In the cloned site (`{site.get('repo_dest')}`): `npm install && npm run build`, "
                      "then deploy to Vercel and point the client's domain at it.")
@@ -317,7 +357,14 @@ def next_steps_md(slug: str, intake: dict, crons: list[str], hermes_present: boo
         lines.extend(crons)
         lines.append("```")
     lines.append("")
-    lines.append(f"## Start the gateway\n```\nhermes -p {slug} gateway\n```")
+    lines.append("## Promote to live (production droplet)")
+    lines.append(f"On the server, after `install_server.sh`:\n```\nsudo infra/promote_client.sh "
+                 f"{slug} --base-domain {suggested_host.split('.', 1)[1] if '.' in suggested_host else 'hooks.example.com'}\n```")
+    lines.append(f"This wires Caddy `{suggested_host} → 127.0.0.1:{port}`, enables "
+                 f"`hermes-gateway@{slug}.service`, and reloads Caddy.")
+    lines.append("")
+    lines.append(f"## Or start the gateway manually (dev / non-systemd)\n```\nhermes -p {slug} gateway\n```\n"
+                 f"(listens on port {port})")
     return "\n".join(lines) + "\n"
 
 
@@ -355,7 +402,11 @@ def main() -> None:
 
     mode = intake["site"].get("mode", "augment")
     adapter = "astro-git" if mode == "greenfield" else intake["site"]["adapter"]
+    port = allocate_port(slug, root)
+    base_domain = intake.get("channels", {}).get("public_base_domain", "hooks.example.com")
+    suggested_host = f"{slug}.{base_domain}"
     cfg = build_config(intake)
+    cfg["platforms"]["webhook"]["extra"]["port"] = port
     env = build_env(intake, secrets)
     hermes_present = shutil.which("hermes") is not None
     crons = cron_commands(slug, intake.get("cadence", {}))
@@ -364,6 +415,7 @@ def main() -> None:
         "slug": slug, "profile": str(profile), "mode": mode, "hermes_present": hermes_present,
         "config_keys": sorted(cfg.keys()), "env_keys": sorted(env.keys()),
         "skills": SKILLS, "adapter": adapter,
+        "webhook_port": port, "suggested_host": suggested_host,
     }
     if mode == "greenfield":
         planned["site_dest"] = str(Path(intake["site"]["repo_dest"]).expanduser())
@@ -416,12 +468,13 @@ def main() -> None:
 
     # 7. Runbook
     (profile / "NEXT_STEPS.md").write_text(
-        next_steps_md(slug, intake, crons, hermes_present), encoding="utf-8")
+        next_steps_md(slug, intake, crons, hermes_present, port, suggested_host), encoding="utf-8")
 
     print(json.dumps({
         "success": True, "profile": str(profile), "mode": mode, "adapter": adapter,
         "skills_installed": SKILLS, "env_keys": sorted(env.keys()),
         "cron_created": hermes_present, "site": site_info,
+        "webhook_port": port, "suggested_host": suggested_host,
         "next_steps": str(profile / "NEXT_STEPS.md"),
     }, indent=2))
 
