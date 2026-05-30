@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FullThrottle — Unleash Your Stack</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #080808;
+    --near-black: #0f0f0f;
+    --dark-surface: #141414;
+    --card-bg: #1a1a1a;
+    --white: #ffffff;
+    --off-white: #f2f2f2;
+    --muted: #888888;
+    --border: rgba(255,255,255,0.08);
+    --border-strong: rgba(255,255,255,0.14);
+
+    /* Throttle Orange — the only accent */
+    --throttle: #ff4800;
+    --throttle-glow: rgba(255,72,0,0.35);
+    --throttle-dim: rgba(255,72,0,0.12);
+
+    --radius-sm: 2px;
+    --radius-md: 4px;
+    --radius-lg: 6px;
+
+    --shadow-card: 0 0 0 1px rgba(255,255,255,0.06), 0 4px 24px rgba(0,0,0,0.6);
+    --shadow-elevated: 0 0 0 1px rgba(255,255,255,0.08), 0 8px 40px rgba(0,0,0,0.7);
+    --shadow-glow: 0 0 60px var(--throttle-glow), 0 0 120px rgba(255,72,0,0.1);
+
+    --font-display: 'DM Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --font-body: 'DM Sans', system-ui, -apple-system, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: var(--font-body);
+    background: var(--black);
+    color: var(--off-white);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* ── Navigation ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 40px;
+    background: transparent;
+    transition: background 0.3s, backdrop-filter 0.3s;
+  }
+  nav.scrolled {
+    background: rgba(8,8,8,0.85);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-logo {
+    font-family: var(--font-display);
+    font-size: 22px; font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--white);
+    text-decoration: none;
+    text-transform: uppercase;
+  }
+  .nav-logo span { color: var(--throttle); }
+  .nav-links {
+    display: flex; align-items: center; gap: 32px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.65);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--white); }
+  .nav-cta {
+    font-family: var(--font-mono);
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--white);
+    background: var(--throttle);
+    padding: 10px 20px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .nav-cta:hover { background: #ff5c1a; box-shadow: var(--shadow-glow); }
+
+  /* ── Sections ── */
+  section { position: relative; }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column; align-items: flex-start; justify-content: center;
+    padding: 120px 80px 100px;
+    background: radial-gradient(ellipse 80% 60% at 50% 20%, rgba(255,72,0,0.08) 0%, transparent 60%),
+                linear-gradient(180deg, var(--near-black) 0%, var(--black) 100%);
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--throttle);
+    border: 1px solid var(--throttle-dim);
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 32px;
+  }
+  .hero-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--throttle);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--throttle-glow);
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-size: clamp(48px, 8vw, 96px);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -3px;
+    color: var(--white);
+    max-width: 900px;
+    text-transform: uppercase;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--throttle);
+    text-shadow: 0 0 40px var(--throttle-glow);
+  }
+  .hero-sub {
+    font-size: clamp(16px, 2.5vw, 20px);
+    font-weight: 400;
+    color: var(--muted);
+    max-width: 520px;
+    margin-top: 28px;
+    line-height: 1.6;
+  }
+  .hero-actions {
+    display: flex; gap: 16px; margin-top: 40px;
+  }
+  .btn-primary {
+    font-family: var(--font-mono);
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--white);
+    background: var(--throttle);
+    padding: 14px 32px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.15s;
+  }
+  .btn-primary:hover { background: #ff5c1a; box-shadow: var(--shadow-glow); transform: translateY(-1px); }
+  .btn-ghost {
+    font-family: var(--font-mono);
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--off-white);
+    background: transparent;
+    padding: 14px 32px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .btn-ghost:hover { border-color: rgba(255,255,255,0.3); background: rgba(255,255,255,0.03); }
+
+  /* Speed lines (decorative) */
+  .hero-lines {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    overflow: hidden; pointer-events: none; z-index: 0;
+  }
+  .hero-line {
+    position: absolute; left: -100%;
+    width: 40%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,72,0,0.15), transparent);
+    animation: streak 5s linear infinite;
+  }
+  .hero-line:nth-child(1) { top: 22%; animation-delay: 0s; animation-duration: 4.5s; }
+  .hero-line:nth-child(2) { top: 38%; animation-delay: 1.2s; animation-duration: 5.2s; width: 25%; }
+  .hero-line:nth-child(3) { top: 56%; animation-delay: 2.7s; animation-duration: 4.8s; width: 35%; }
+  .hero-line:nth-child(4) { top: 72%; animation-delay: 3.9s; animation-duration: 5.5s; width: 20%; }
+  @keyframes streak {
+    0% { left: -50%; opacity: 0; }
+    15% { opacity: 1; }
+    85% { opacity: 1; }
+    100% { left: 110%; opacity: 0; }
+  }
+
+  .hero > *:not(.hero-lines) { position: relative; z-index: 1; }
+
+  /* ── Section Title ── */
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(32px, 5vw, 56px);
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    line-height: 1.05;
+    text-transform: uppercase;
+    color: var(--white);
+  }
+  .section-sub {
+    font-size: 16px; color: var(--muted);
+    max-width: 480px; margin-top: 16px;
+  }
+
+  /* ── Capabilities ── */
+  .capabilities {
+    padding: 120px 80px;
+    background: var(--near-black);
+  }
+  .cap-header { margin-bottom: 64px; }
+  .cap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+  .cap-card {
+    background: var(--dark-surface);
+    padding: 48px 40px;
+    transition: background 0.25s;
+  }
+  .cap-card:hover { background: var(--card-bg); }
+  .cap-icon {
+    font-size: 28px; margin-bottom: 20px;
+    display: block; width: 48px; height: 48px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--throttle-dim);
+    border-radius: var(--radius-sm);
+    color: var(--throttle);
+  }
+  .cap-card h3 {
+    font-family: var(--font-display);
+    font-size: 20px; font-weight: 800;
+    letter-spacing: -0.3px;
+    color: var(--white);
+    margin-bottom: 12px;
+    text-transform: uppercase;
+  }
+  .cap-card p {
+    font-size: 14px; color: var(--muted);
+    line-height: 1.7;
+    max-width: 320px;
+  }
+
+  /* ── Stats ── */
+  .stats {
+    padding: 80px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+  }
+  .stat-item {
+    background: var(--black);
+    padding: 48px 40px;
+    text-align: center;
+  }
+  .stat-value {
+    font-family: var(--font-mono);
+    font-size: clamp(40px, 6vw, 64px);
+    font-weight: 700;
+    color: var(--throttle);
+    letter-spacing: -1px;
+    line-height: 1;
+    text-shadow: 0 0 30px var(--throttle-glow);
+  }
+  .stat-label {
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-top: 12px;
+  }
+
+  /* ── How It Works ── */
+  .how {
+    padding: 120px 80px;
+    background: var(--black);
+  }
+  .how-header { margin-bottom: 64px; }
+  .how-steps {
+    display: flex; flex-direction: column; gap: 1px;
+    max-width: 720px;
+  }
+  .how-step {
+    display: flex; gap: 32px;
+    padding: 36px 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .how-step:last-child { border-bottom: none; }
+  .step-num {
+    font-family: var(--font-mono);
+    font-size: 13px; font-weight: 700;
+    color: var(--throttle);
+    min-width: 28px;
+    padding-top: 2px;
+  }
+  .step-content h4 {
+    font-family: var(--font-display);
+    font-size: 22px; font-weight: 800;
+    letter-spacing: -0.3px;
+    color: var(--white);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+  .step-content p {
+    font-size: 14px; color: var(--muted);
+    line-height: 1.7;
+    max-width: 500px;
+  }
+
+  /* ── CTA ── */
+  .cta {
+    padding: 120px 80px;
+    background: radial-gradient(ellipse 70% 50% at 50% 50%, rgba(255,72,0,0.1) 0%, transparent 60%),
+                var(--near-black);
+    text-align: center;
+  }
+  .cta h2 {
+    font-family: var(--font-display);
+    font-size: clamp(36px, 6vw, 64px);
+    font-weight: 900;
+    letter-spacing: -2px;
+    line-height: 1.05;
+    text-transform: uppercase;
+    color: var(--white);
+    max-width: 700px;
+    margin: 0 auto 24px;
+  }
+  .cta h2 em {
+    font-style: normal;
+    color: var(--throttle);
+  }
+  .cta p {
+    font-size: 16px; color: var(--muted);
+    max-width: 460px; margin: 0 auto 40px;
+  }
+
+  /* ── Footer ── */
+  footer {
+    padding: 48px 80px;
+    border-top: 1px solid var(--border);
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+    background: var(--black);
+  }
+  .footer-logo {
+    font-family: var(--font-display);
+    font-size: 18px; font-weight: 800;
+    letter-spacing: -0.3px;
+    color: var(--white);
+    text-transform: uppercase;
+  }
+  .footer-logo span { color: var(--throttle); }
+  .footer-copy {
+    font-size: 13px; color: var(--muted);
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 1024px) {
+    .hero, .capabilities, .stats, .how, .cta { padding: 80px 40px; }
+    .hero { min-height: auto; padding-top: 140px; padding-bottom: 80px; }
+    .cap-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 768px) {
+    .hero, .capabilities, .stats, .how, .cta, footer { padding: 60px 24px; }
+    .hero { padding-top: 120px; }
+    .cap-grid { grid-template-columns: 1fr; }
+    .stats { grid-template-columns: 1fr; }
+    .hero-actions { flex-direction: column; width: 100%; }
+    .hero-actions .btn-primary,
+    .hero-actions .btn-ghost { width: 100%; text-align: center; }
+    nav { padding: 16px 24px; }
+    .nav-links { display: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-line { animation: none; opacity: 0.3; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav id="nav">
+  <a href="#" class="nav-logo">Full<span>Throttle</span></a>
+  <ul class="nav-links">
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#cta" class="nav-cta">Get Started</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-lines" aria-hidden="true">
+    <div class="hero-line"></div>
+    <div class="hero-line"></div>
+    <div class="hero-line"></div>
+    <div class="hero-line"></div>
+  </div>
+
+  <div class="hero-badge">Now in beta &mdash; early access open</div>
+  <h1>Automate at <em>full throttle</em></h1>
+  <p class="hero-sub">
+    AI-powered automation stack that handles client outreach, content, and operations
+    so your business runs at redline — 24/7, without burnout.
+  </p>
+  <div class="hero-actions">
+    <a href="#cta" class="btn-primary">Start Building</a>
+    <a href="#how" class="btn-ghost">See How It Works</a>
+  </div>
+</section>
+
+<!-- Capabilities -->
+<section class="capabilities" id="capabilities">
+  <div class="cap-header">
+    <h2 class="section-title">Built for<br>relentless execution</h2>
+    <p class="section-sub">Everything you need to run client operations at maximum velocity. No fluff, no filler — just throughput.</p>
+  </div>
+
+  <div class="cap-grid">
+    <div class="cap-card">
+      <div class="cap-icon">&#9889;</div>
+      <h3>Client Agents</h3>
+      <p>Dedicated AI agents per client — isolated profiles, custom toolsets, and independent memory. Every client gets a bespoke automation engine.</p>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">&#128279;</div>
+      <h3>Social Automation</h3>
+      <p>LinkedIn, Twitter, and beyond. Schedule posts, engage leads, and build presence across platforms — all driven by your playbooks.</p>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">&#128200;</div>
+      <h3>Web Intelligence</h3>
+      <p>Scrape, parse, and analyze client websites. Extract value props, industry signals, and competitive intel — automatically.</p>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">&#128231;</div>
+      <h3>Smart Outreach</h3>
+      <p>Personalized messaging at scale. Multi-channel sequences that adapt based on engagement signals — no templates, no spray-and-pray.</p>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">&#128221;</div>
+      <h3>Content Engine</h3>
+      <p>Generate proposals, case studies, and social content from raw client data. Your brand voice, amplified by AI.</p>
+    </div>
+    <div class="cap-card">
+      <div class="cap-icon">&#128273;</div>
+      <h3>Secure & Isolated</h3>
+      <p>Per-client sandboxing with encrypted credential storage. What happens in one client profile stays in one client profile.</p>
+    </div>
+  </div>
+</section>
+
+<!-- Stats -->
+<section class="stats">
+  <div class="stat-item">
+    <div class="stat-value">24/7</div>
+    <div class="stat-label">Always-On Operation</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value">100+</div>
+    <div class="stat-label">Client Profiles Managed</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-value">&lt;5min</div>
+    <div class="stat-label">New Client Onboarding</div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="how" id="how">
+  <div class="how-header">
+    <h2 class="section-title">How it<br>works</h2>
+    <p class="section-sub">Three steps from zero to full automation. No engineering team required.</p>
+  </div>
+  <div class="how-steps">
+    <div class="how-step">
+      <div class="step-num">01</div>
+      <div class="step-content">
+        <h4>Create a Profile</h4>
+        <p>One command spins up an isolated Hermes agent profile for your client — complete with its own memory, tools, and credentials. Think of it as a dedicated AI employee per account.</p>
+      </div>
+    </div>
+    <div class="how-step">
+      <div class="step-num">02</div>
+      <div class="step-content">
+        <h4>Wire the Data</h4>
+        <p>Connect the profile to the client's website, social accounts, and data sources. The agent learns their industry, tone, and positioning — automatically.</p>
+      </div>
+    </div>
+    <div class="how-step">
+      <div class="step-num">03</div>
+      <div class="step-content">
+        <h4>Hit the Gas</h4>
+        <p>Set your playbooks — outreach sequences, content calendars, monitoring jobs — and let the agent execute. Dashboard gives you oversight; automation does the work.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta" id="cta">
+  <h2>Ready to run <em>flat out</em>?</h2>
+  <p>Stop doing things that machines should handle. Get an automation stack that scales with your ambition.</p>
+  <a href="#" class="btn-primary" style="font-size:14px; padding:16px 40px;">Get Early Access</a>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="footer-logo">Full<span>Throttle</span></div>
+  <div class="footer-copy">&copy; 2026 FullThrottle. All rights reserved.</div>
+</footer>
+
+<script>
+  // Sticky nav background on scroll
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  // Smooth scroll for anchor links (belt-and-suspenders for older browsers)
+  document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', e => {
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+</script>
+
+</body>
+</html>
