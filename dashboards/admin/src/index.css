@@ -1,0 +1,110 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+ * Full Throttle "broadcast-terminal" theme.
+ * Mirrors `dashboards/admin-mockup.html`. Tailwind v4 picks these up as
+ * theme tokens (named with `--color-*`, `--font-*`, etc.) so utilities like
+ * `bg-bg`, `text-mid/60`, `font-mono` work out of the box.
+ * ------------------------------------------------------------------------- */
+@theme {
+  --color-bg: #041c1c;
+  --color-mid: #ffe6cb;
+  --color-ok: #4ade80;
+  --color-warn: #facc15;
+  --color-err: #f87171;
+
+  --font-sans:
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono:
+    "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  --radius-card: 0.5rem;
+}
+
+@layer base {
+  html,
+  body {
+    background: var(--color-bg);
+    color: var(--color-mid);
+    font-family: var(--font-sans);
+    font-size: 0.8rem;
+    line-height: 1.55;
+  }
+  body {
+    min-height: 100vh;
+    position: relative;
+  }
+  /* CRT scanline overlay — fixed, non-interactive */
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0.1;
+    background: repeating-conic-gradient(currentColor 0% 25%, transparent 0% 50%)
+      0 0 / 2px 2px;
+  }
+}
+
+@layer components {
+  /* Corner viewfinder ticks rendered on each card via four spans */
+  .cm {
+    position: absolute;
+    width: 10px;
+    height: 10px;
+    opacity: 0.25;
+  }
+  .cm::before,
+  .cm::after {
+    content: "";
+    position: absolute;
+    background: var(--color-mid);
+  }
+  .cm::before {
+    width: 100%;
+    height: 1px;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  .cm::after {
+    height: 100%;
+    width: 1px;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+  .cm-tl {
+    top: 4px;
+    left: 4px;
+  }
+  .cm-tr {
+    top: 4px;
+    right: 4px;
+  }
+  .cm-bl {
+    bottom: 4px;
+    left: 4px;
+  }
+  .cm-br {
+    bottom: 4px;
+    right: 4px;
+  }
+
+  /* Pulsing "REC" dot */
+  .rec-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 9999px;
+    background: var(--color-mid);
+    animation: rec-pulse 1.5s ease-in-out infinite;
+  }
+  @keyframes rec-pulse {
+    0%,
+    100% {
+      opacity: 0.35;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+}
