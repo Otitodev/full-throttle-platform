@@ -137,6 +137,47 @@ step_enable_caddy() {
   systemctl reload caddy || systemctl restart caddy
 }
 
+step_admin_password() {
+  # Generate the operator dashboard's basicauth password once. Stored
+  # hash goes to /etc/full-throttle/.admin-password.hash (root:root, mode 600).
+  # Re-runs are no-ops: the plaintext is only ever printed at first generation.
+  local hash_file=/etc/full-throttle/.admin-password.hash
+  if [ -f "$hash_file" ] && [ "$MODE" != "reinstall" ]; then
+    ok "admin password already set ($hash_file)"
+    return
+  fi
+  if ! command -v caddy >/dev/null; then
+    warn "caddy not on PATH; skipping admin password generation"; return
+  fi
+  log "generating admin dashboard password"
+  local pw
+  pw=$(openssl rand -base64 24)
+  caddy hash-password --plaintext "$pw" > "$hash_file"
+  chmod 600 "$hash_file"
+  chown root:root "$hash_file"
+  printf '\n\033[1;33m'
+  printf '================================================================\n'
+  printf '  ADMIN DASHBOARD PASSWORD (save now — not shown again):\n'
+  printf '  user:     admin\n'
+  printf '  password: %s\n' "$pw"
+  printf '================================================================\n'
+  printf '\033[0m\n'
+}
+
+step_aggregator_unit() {
+  if [ -f /etc/systemd/system/fullthrottle-aggregator.service ] && [ "$MODE" != "reinstall" ]; then
+    ok "fullthrottle-aggregator.service already installed"; return
+  fi
+  if [ ! -f "${INFRA_DIR}/systemd/fullthrottle-aggregator.service" ]; then
+    warn "aggregator unit file missing in repo; skipping"; return
+  fi
+  log "installing fullthrottle-aggregator.service"
+  install -m 0644 \
+    "${INFRA_DIR}/systemd/fullthrottle-aggregator.service" \
+    /etc/systemd/system/fullthrottle-aggregator.service
+  systemctl daemon-reload
+}
+
 step_check() {
   log "checking install state"
   command -v hermes >/dev/null && ok "hermes:    $(command -v hermes)" || warn "hermes:    MISSING"
@@ -145,7 +186,10 @@ step_check() {
   id hermes        >/dev/null 2>&1 && ok "user:      hermes" || warn "user:      MISSING"
   [ -d /etc/full-throttle/caddy.d ] && ok "caddy.d:   /etc/full-throttle/caddy.d" || warn "caddy.d:   MISSING"
   [ -f /etc/systemd/system/hermes-gateway@.service ] && ok "unit:      hermes-gateway@.service" || warn "unit:      MISSING"
+  [ -f /etc/systemd/system/fullthrottle-aggregator.service ] && ok "unit:      fullthrottle-aggregator.service" || warn "unit:      fullthrottle-aggregator MISSING"
+  [ -f /etc/full-throttle/.admin-password.hash ] && ok "admin pw:  /etc/full-throttle/.admin-password.hash" || warn "admin pw:  not generated"
   systemctl is-active --quiet caddy && ok "caddy:     active" || warn "caddy:     not running"
+  systemctl is-active --quiet fullthrottle-aggregator && ok "aggregator: active" || warn "aggregator: not running"
 }
 
 require_root
@@ -165,7 +209,9 @@ step_hermes
 step_dirs
 step_caddyfile
 step_systemd_unit
+step_aggregator_unit
 step_enable_caddy
+step_admin_password
 step_check
 
 log "done. next: onboard a client (scripts/onboard_client.py) then promote (infra/promote_client.sh)."
