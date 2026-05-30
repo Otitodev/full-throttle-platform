@@ -43,6 +43,22 @@ Flags: `--profiles-root` (default `$HERMES_HOME` else `~/.hermes/profiles`), `--
 - Otherwise → creates the profile layout directly (the standard subdirs). Same result for our
   purposes; useful in CI/dev without the binary.
 
+## Site modes (augment vs greenfield)
+
+`intake.site.mode` selects the path:
+
+- **`augment`** (default) — the client keeps their existing site; the platform publishes into it
+  via the chosen `adapter` (`wordpress-rest` / `proxy-subdir` / `manual`). Required: `adapter`
+  (+ `wp_url` or `public_base` per adapter).
+- **`greenfield`** — clone the parameterized Astro template, inject `business.json` +
+  `locations.json` from the intake, `git init` + initial commit. Required: `template_repo`
+  (path to the parameterized template, e.g. `mrfence-site`), `repo_dest` (where to create the
+  client site repo). Optional: `cities` (list of `{city, slug, county}` → `src/content/locations.json`),
+  and a `site.business` object to override the synthesized `business.json`. Config is written with
+  `site_type: greenfield`, `publishing.adapter: astro-git`, and `publishing.repo`/`terminal.cwd`
+  pointing at the cloned site. `NEXT_STEPS.md` lists the deploy steps (`npm install && npm run
+  build`, push to Vercel, point the domain).
+
 ## Finish on the box
 
 After running, complete `NEXT_STEPS.md`, then:

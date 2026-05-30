@@ -74,15 +74,22 @@ def validate(intake: dict) -> None:
     if not client.get("business_name"):
         die("client.business_name is required")
     site = intake.get("site", {})
-    if site.get("mode", "augment") != "augment":
-        die("this MVP onboards site.mode == 'augment' only (greenfield deferred)")
-    adapter = site.get("adapter")
-    if adapter not in VALID_ADAPTERS:
-        die(f"site.adapter must be one of {sorted(VALID_ADAPTERS)}; got {adapter!r}")
-    if adapter == "wordpress-rest" and not site.get("wp_url"):
-        die("site.adapter=wordpress-rest requires site.wp_url")
-    if adapter == "proxy-subdir" and not site.get("public_base"):
-        die("site.adapter=proxy-subdir requires site.public_base")
+    mode = site.get("mode", "augment")
+    if mode not in {"augment", "greenfield"}:
+        die(f"site.mode must be 'augment' or 'greenfield'; got {mode!r}")
+    if mode == "augment":
+        adapter = site.get("adapter")
+        if adapter not in VALID_ADAPTERS:
+            die(f"site.adapter must be one of {sorted(VALID_ADAPTERS)}; got {adapter!r}")
+        if adapter == "wordpress-rest" and not site.get("wp_url"):
+            die("site.adapter=wordpress-rest requires site.wp_url")
+        if adapter == "proxy-subdir" and not site.get("public_base"):
+            die("site.adapter=proxy-subdir requires site.public_base")
+    else:  # greenfield
+        if not site.get("template_repo"):
+            die("site.mode=greenfield requires site.template_repo (path to the Astro template)")
+        if not site.get("repo_dest"):
+            die("site.mode=greenfield requires site.repo_dest (where to create the client site repo)")
 
 
 def build_config(intake: dict) -> dict:
@@ -93,11 +100,12 @@ def build_config(intake: dict) -> dict:
     channels = intake.get("channels", {})
     lead_route = channels.get("lead_route", "lead")
 
+    mode = site.get("mode", "augment")
     cfg: dict = {
-        "site_type": "augment",
+        "site_type": mode,
         # Governance (G1): no unrestricted code execution in production.
         "agent": {"disabled_toolsets": ["code_execution"]},
-        "publishing": {"adapter": site["adapter"]},
+        "publishing": {"adapter": site["adapter"]} if mode == "augment" else {},
         "model": {
             "provider": model.get("provider", "anthropic"),
             "default": model.get("model", "claude-sonnet-4-6"),
@@ -123,11 +131,15 @@ def build_config(intake: dict) -> dict:
             }
         },
     }
-    if site["adapter"] == "wordpress-rest":
+    if mode == "greenfield":
+        # We own + commit the client's Astro site; publish via astro-git.
+        cfg["publishing"] = {"adapter": "astro-git", "repo": site["repo_dest"]}
+        cfg["terminal"] = {"cwd": site["repo_dest"]}
+    elif site["adapter"] == "wordpress-rest":
         cfg["publishing"]["wp_url"] = site["wp_url"]
         if site.get("wp_user"):
             cfg["publishing"]["wp_user"] = site["wp_user"]
-    if site["adapter"] == "proxy-subdir":
+    elif site["adapter"] == "proxy-subdir":
         cfg["publishing"]["public_base"] = site["public_base"]
 
     owner = channels.get("owner_sms")
@@ -147,12 +159,82 @@ def build_env(intake: dict, secrets: dict) -> dict:
     return env
 
 
+def synthesize_business(intake: dict) -> dict:
+    """Build the site's business.json from the intake (operator-provided
+    site.business wins; otherwise derive sensible defaults from client fields)."""
+    c = intake["client"]
+    site = intake["site"]
+    name = c["business_name"]
+    digits = "".join(ch for ch in str(c.get("phone", "")) if ch.isdigit())
+    base = {
+        "name": name,
+        "nameShort": name.upper(),
+        "nameTitle": name,
+        "nameSuffix": "",
+        "foundedYear": c.get("founded_year", 2020),
+        "yearsServing": c.get("years_serving", "10+"),
+        "tagline": c.get("tagline", f"{c.get('location_primary', 'your area')}'s trusted fencing contractor."),
+        "phone": {"display": c.get("phone", ""), "href": f"tel:{digits}" if digits else ""},
+        "siteUrl": f"https://{c['domain']}" if c.get("domain") else "",
+        "estimateUrl": c.get("estimate_url", ""),
+        "gtmId": c.get("gtm_id", ""),
+        "location": {
+            "primary": c.get("location_primary", ""),
+            "region": c.get("region", ""),
+            "state": c.get("state", ""),
+            "stateAbbr": c.get("state_abbr", ""),
+        },
+        "citiesCount": c.get("cities_count", "20+"),
+        "rating": c.get("rating", "5★"),
+        "hours": c.get("hours", "Mon – Fri · 8am – 5pm"),
+        "services": c.get("services", []),
+        "socials": c.get("socials", {"facebook": "", "instagram": "", "youtube": "", "tiktok": ""}),
+        "logo": c.get("logo", "/images/logo-sm-white.png"),
+    }
+    base.update(site.get("business", {}))  # explicit business block overrides
+    return base
+
+
+def provision_greenfield_site(intake: dict) -> dict:
+    """Clone the Astro template to the client site repo and inject business.json
+    (+ locations.json). Returns a summary dict."""
+    site = intake["site"]
+    template = Path(site["template_repo"]).expanduser().resolve()
+    dest = Path(site["repo_dest"]).expanduser().resolve()
+    if not (template / "src").is_dir():
+        die(f"template_repo doesn't look like an Astro site (no src/): {template}")
+    if dest.exists() and any(dest.iterdir()):
+        die(f"repo_dest is not empty: {dest} (refusing to overwrite a non-empty dir)")
+
+    shutil.copytree(template, dest,
+                    ignore=shutil.ignore_patterns("node_modules", "dist", ".git", ".astro"))
+    data_dir = dest / "src" / "data"
+    data_dir.mkdir(parents=True, exist_ok=True)
+    (data_dir / "business.json").write_text(
+        json.dumps(synthesize_business(intake), indent=2), encoding="utf-8")
+    if site.get("cities"):
+        (dest / "src" / "content" / "locations.json").write_text(
+            json.dumps(site["cities"], indent=2), encoding="utf-8")
+
+    subprocess.run(["git", "init", "-q", str(dest)], capture_output=True, text=True, encoding="utf-8")
+    subprocess.run(["git", "-C", str(dest), "add", "-A"], capture_output=True, text=True, encoding="utf-8")
+    subprocess.run(["git", "-C", str(dest), "-c", "user.email=onboard@fullthrottle.local",
+                    "-c", "user.name=Full Throttle", "commit", "-q", "-m",
+                    "chore: initialize client site from template"],
+                   capture_output=True, text=True, encoding="utf-8")
+    return {"template": str(template), "dest": str(dest),
+            "business_json": str(data_dir / "business.json")}
+
+
 def render_env_file(env: dict) -> str:
     return "".join(f"{k}={v}\n" for k, v in env.items())
 
 
 def memory_md(intake: dict) -> str:
     c = intake["client"]
+    site = intake["site"]
+    mode = site.get("mode", "augment")
+    adapter = "astro-git" if mode == "greenfield" else site.get("adapter", "")
     services = ", ".join(intake.get("keywords", []) or c.get("services", []) or [])
     return (
         f"# {c['business_name']} — business facts\n\n"
@@ -161,7 +243,7 @@ def memory_md(intake: dict) -> str:
         f"- Service area: {c.get('service_area', '')}\n"
         f"- Services / keywords: {services}\n"
         f"- Timezone: {c.get('timezone', '')}\n"
-        f"- Site mode: augment (adapter: {intake['site']['adapter']})\n"
+        f"- Site mode: {mode} (adapter: {adapter})\n"
     )
 
 
@@ -210,14 +292,18 @@ def cron_commands(slug: str, cadence: dict) -> list[str]:
 
 def next_steps_md(slug: str, intake: dict, crons: list[str], hermes_present: bool) -> str:
     site = intake["site"]
+    mode = site.get("mode", "augment")
     lines = [f"# Next steps — {intake['client']['business_name']} ({slug})", ""]
     lines.append("Manual steps the onboarding script can't do offline:\n")
     lines.append("1. Provision/assign a Twilio number for the owner and confirm inbound routing.")
     lines.append("2. Point the client's website lead form at the gateway webhook:")
     lines.append("   `https://<your-host>/webhooks/lead` (HMAC = WEBHOOK_LEAD_SECRET).")
-    if site["adapter"] == "wordpress-rest":
+    if mode == "greenfield":
+        lines.append(f"3. In the cloned site (`{site.get('repo_dest')}`): `npm install && npm run build`, "
+                     "then deploy to Vercel and point the client's domain at it.")
+    elif site.get("adapter") == "wordpress-rest":
         lines.append("3. Create a WordPress Application Password and confirm WP_APP_PASSWORD in .env.")
-    if site["adapter"] == "proxy-subdir":
+    elif site.get("adapter") == "proxy-subdir":
         lines.append("3. Deploy the Cloudflare Worker mapping the /blog route to our origin "
                      "(see content-publisher/references/proxy_subdir_setup.md).")
     lines.append("4. Set up GBP OAuth (business.manage) and the CRM token if using Jobber.")
@@ -267,16 +353,20 @@ def main() -> None:
     if profile.exists() and not args.force:
         die(f"profile already exists: {profile} (use --force)")
 
+    mode = intake["site"].get("mode", "augment")
+    adapter = "astro-git" if mode == "greenfield" else intake["site"]["adapter"]
     cfg = build_config(intake)
     env = build_env(intake, secrets)
     hermes_present = shutil.which("hermes") is not None
     crons = cron_commands(slug, intake.get("cadence", {}))
 
     planned = {
-        "slug": slug, "profile": str(profile), "hermes_present": hermes_present,
+        "slug": slug, "profile": str(profile), "mode": mode, "hermes_present": hermes_present,
         "config_keys": sorted(cfg.keys()), "env_keys": sorted(env.keys()),
-        "skills": SKILLS, "adapter": intake["site"]["adapter"],
+        "skills": SKILLS, "adapter": adapter,
     }
+    if mode == "greenfield":
+        planned["site_dest"] = str(Path(intake["site"]["repo_dest"]).expanduser())
     if args.dry_run:
         print(json.dumps({"success": True, "dry_run": True, "planned": planned}, indent=2))
         return
@@ -316,6 +406,9 @@ def main() -> None:
     (profile / "memories" / "USER.md").write_text(user_md(intake), encoding="utf-8")
     (profile / "AGENTS.md").write_text(agents_md(intake), encoding="utf-8")
 
+    # 5b. Greenfield: clone the Astro template + inject business.json/locations.json
+    site_info = provision_greenfield_site(intake) if mode == "greenfield" else None
+
     # 6. Cron jobs
     if hermes_present:
         for cmd in crons:
@@ -326,9 +419,10 @@ def main() -> None:
         next_steps_md(slug, intake, crons, hermes_present), encoding="utf-8")
 
     print(json.dumps({
-        "success": True, "profile": str(profile), "adapter": intake["site"]["adapter"],
+        "success": True, "profile": str(profile), "mode": mode, "adapter": adapter,
         "skills_installed": SKILLS, "env_keys": sorted(env.keys()),
-        "cron_created": hermes_present, "next_steps": str(profile / "NEXT_STEPS.md"),
+        "cron_created": hermes_present, "site": site_info,
+        "next_steps": str(profile / "NEXT_STEPS.md"),
     }, indent=2))
 
 
