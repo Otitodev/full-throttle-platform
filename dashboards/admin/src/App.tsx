@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 
 import { Topbar } from "./components/Topbar";
 import { Vignette } from "./components/Vignette";
+import { ClientDetail } from "./pages/ClientDetail";
 import { Overview } from "./pages/Overview";
 
 export default function App() {
@@ -12,7 +13,7 @@ export default function App() {
         <Topbar />
         <Routes>
           <Route path="/" element={<Overview />} />
-          {/* /clients/:slug — Task 1.7 */}
+          <Route path="/clients/:slug" element={<ClientDetail />} />
         </Routes>
         <Footer />
       </div>

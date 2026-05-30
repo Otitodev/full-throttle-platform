@@ -95,6 +95,91 @@ sudo systemctl reload caddy
 # Profile + port registry stay (audit trail). Remove manually if you really need to.
 ```
 
+## Dashboards (admin + per-client)
+
+The deployment ships two browser UIs. Both share a single backing service
+(`fullthrottle-aggregator`, systemd unit, binds `127.0.0.1:9201`).
+
+### Admin dashboard
+
+For you, the platform operator. Aggregates state across every client.
+
+```bash
+# 1. Install (once)
+sudo bash infra/install_server.sh
+# step_admin_password generates a random admin password and prints it ONCE.
+# Save the printed line — it is not stored anywhere recoverable. To rotate
+# later, delete /etc/full-throttle/.admin-password.hash and re-run.
+
+# 2. Build + publish the SPA
+sudo bash infra/deploy_admin_dashboard.sh \
+    --admin-domain admin.$(curl -s -4 ifconfig.me).nip.io
+# (`--admin-domain admin.fullthrottle.io` for a real domain.)
+```
+
+What this does:
+- Runs `npm ci && npm run build` in `dashboards/admin/` as the hermes user.
+- Renders `infra/caddy/aggregator-admin.caddy.example`, substituting
+  `{{ADMIN_DOMAIN}}` and `{{ADMIN_PASSWORD_HASH}}` (from
+  `/etc/full-throttle/.admin-password.hash`), drops the result at
+  `/etc/full-throttle/caddy.d/aggregator-admin.caddy`.
+- Reloads Caddy.
+
+Result: `https://<admin-domain>/` — basicauth as `admin` + the password
+`install_server.sh` printed. The aggregator API is at `/api/admin/*` under
+the same auth.
+
+### Per-client (owner) dashboard
+
+For each contractor. Mounted at `/dash/` on their per-client subdomain;
+auth is a per-profile token in the URL fragment.
+
+Authoring: nothing extra. Two existing scripts already handle the flow:
+
+1. `scripts/onboard_client.py` writes `FT_DASHBOARD_TOKEN=…` (random,
+   32-byte URL-safe) into the new profile's `.env`. Re-onboards preserve
+   the existing token so URLs already in the owner's possession keep
+   working.
+2. `infra/promote_client.sh <slug> --base-domain …` materializes a Caddy
+   fragment that mounts the owner SPA at `/dash/*` and the aggregator
+   client API at `/api/client/<slug>/*`, then prints the owner URL with
+   the token in a `#token=…` fragment:
+
+```
+[promote] owner dashboard:
+    https://mrfence.hooks.example.com/dash/#token=<32-byte-urlsafe>
+```
+
+Send that URL to the contractor (SMS / email). On first open the SPA
+extracts the token to `sessionStorage` and strips it from the address bar
+so it never reaches access logs.
+
+### Build the client SPA on the droplet
+
+Like the admin dashboard, the per-client SPA's `dist/` lives in the repo
+checkout. Refresh it after any change:
+
+```bash
+sudo -u hermes bash -c \
+  "cd /srv/full-throttle-platform/dashboards/client && npm ci && npm run build"
+```
+
+### Refresh all promoted clients after a Caddy-fragment template change
+
+`promote_client.sh` writes a per-client fragment to
+`/etc/full-throttle/caddy.d/<slug>.caddy`. When the template inside that
+script changes (e.g. we added `/dash/*` and `/api/client/*` in Phase 2),
+existing fragments are stale until you re-run the script for each client.
+
+```bash
+sudo bash infra/repromote_all.sh hooks.<your-domain>
+```
+
+This iterates every active `hermes-gateway@<slug>.service`, runs
+`promote_client.sh <slug> --base-domain hooks.<your-domain>`, and reports a
+summary. Idempotent — it only refreshes the fragment + restarts what
+`promote_client.sh` already restarts.
+
 ## Smoke-test the deployment (no real client needed)
 
 `scripts/test_onboard.sh` provisions a throwaway `smoke` profile with a placeholder

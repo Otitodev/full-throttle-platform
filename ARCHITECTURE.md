@@ -331,7 +331,93 @@ Packaged in `infra/` for a single-droplet, subdomain-per-client setup (full runb
   `https://<slug>.hooks.<domain>/webhooks/lead`.
 - Scale-out beyond ~30 clients = migrate to kanban dispatcher + worker fleet (§10), no rewrite.
 
-## 15. Reconciliation note
+## 15. Dashboards
+
+Two browser UIs sit on top of the same agent state — an **operator** dashboard
+for the Full Throttle owner (you), and a **per-client** dashboard for each
+contractor (e.g. the owner of Mr. Fence). Both are static SPAs served by Caddy;
+all data comes from a single read-only FastAPI service we call the
+**aggregator**.
+
+### Topology
+
+```
+                                                                droplet
+                                                ┌────────────────────────────────┐
+                                                │                                │
+                  https://admin.<domain> ─┐     │ Caddy                          │
+                            (basicauth)   ├─────▶ admin.<domain>                 │
+                                          │     │   /api/admin/*  → 127.0.0.1:9201
+                                          │     │   /            → admin/dist    │
+                                          │     │                                │
+        https://<slug>.hooks.<domain> ─┐  │     │ <slug>.hooks.<domain>          │
+                                       │  │     │   /api/client/* → 127.0.0.1:9201
+   /dash/#token=…           Bearer ────┤  ├─────▶   /dash/*       → client/dist  │
+                                       │  │     │   /healthz      → "ok"         │
+                                       │  │     │   default       → gateway:<P>  │
+   /webhooks/lead           HMAC ──────┘  │     │                                │
+                                          │     │                                │
+                                                │ fullthrottle-aggregator (9201) │
+                                                │   reads:                       │
+                                                │   ~hermes/.hermes/profiles/    │
+                                                │     <slug>/{config.yaml,       │
+                                                │             state.db,          │
+                                                │             governance/audit}  │
+                                                └────────────────────────────────┘
+```
+
+### Two layers, two auth models
+
+| Surface | URL | Auth | Source of truth |
+|---|---|---|---|
+| Admin SPA | `https://admin.<domain>/` | Caddy basicauth (`admin` + random pw from `install_server.sh`) | `/etc/full-throttle/.admin-password.hash` |
+| Admin API | `/api/admin/*` | Same basicauth at Caddy | n/a (relies on 127.0.0.1 bind + Caddy) |
+| Client SPA | `https://<slug>.hooks.<domain>/dash/` | URL fragment `#token=…` → `sessionStorage` | per-profile `<slug>/.env` |
+| Client API | `/api/client/<slug>/*` | `Authorization: Bearer <token>` per profile | same `<slug>/.env` |
+
+Cross-tenant protection: the expected token is looked up from the slug *in the
+URL path*, not from anything the request carries — there's no way to present
+client A's token for client B's URL and have it match.
+
+### Data sources (Phase -1 in `docs/plans/2026-05-30-dashboards.md`)
+
+The aggregator pulls each metric from exactly one place — no parallel
+computation, no view materialization.
+
+| Metric | Source |
+|---|---|
+| Active gateway / health | `systemctl is-active hermes-gateway@<slug>` (5-second cached) |
+| Sessions, last_active, token spend | `state.db` (read-only SQLite URI + `PRAGMA query_only=1`) |
+| Mutations timeline / approval queue / counts | `governance/audit.jsonl` via the governance skill's `status.py --json` |
+| Leads (7d/30d) | `audit.jsonl` filtered to `skill=lead-response, action=lead_first_touch` |
+| Recent publishes | `audit.jsonl` filtered to `skill=content-publisher, action=publish, status=ok` |
+| Per-client dashboard token | `<profile>/.env` `FT_DASHBOARD_TOKEN` (generated at onboarding) |
+
+Audit-log reads are cached by `(path, mtime_ns)` so unchanged files aren't
+re-parsed every refresh.
+
+### What the dashboards do NOT do (by design)
+
+- **No writes.** Owners can see the approval queue but approve/deny is still
+  via SMS clarify — that's the source of truth, and putting buttons here would
+  split it.
+- **No WebSockets.** Polling every 30 seconds is enough for "what has the agent
+  done lately"; dashboards lag by ≤30 s. Errors don't blank the last good data.
+- **No PII deletion.** Audit-log retention is "forever" until log rotation
+  lands as a future task; admin lead phone/email are redacted by default
+  (`?unredact=1` is allowed but writes a row to `platform-audit.jsonl`).
+- **No multi-droplet HA.** Single droplet, ≲30 clients. The scaling path
+  remains §10.
+
+### Why a separate aggregator (and not endpoints on each gateway)
+
+A single-process read-only service over all profiles means admin pages can
+aggregate across clients in one DB-free query (just dict merges + sorted
+files), and the per-client dashboards reuse the exact same endpoint shape
+without an N+1 fan-out. The aggregator is also stateless — losing it costs us
+exactly zero data; it just stops serving until systemd restarts it.
+
+## 16. Reconciliation note
 
 This document is the canonical architecture. `REVISION.md` was the v2 proposal that has now
 been folded in here (positioning §1, narrowed topology §6, governance §12, observability §13,

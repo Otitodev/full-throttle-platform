@@ -67,11 +67,29 @@ async function fetchJson<T>(path: string): Promise<T> {
   return (await resp.json()) as T;
 }
 
+export interface ClientDetail {
+  slug: string;
+  leads_7d: number;
+  leads_30d: number;
+  recent_publishes_30d: number;
+  mutations_24h: number;
+  approvals_pending: number;
+  meta?: ProfileMeta;
+  // governance/status.py output, surfaced opaquely.
+  timeline?: AuditEntry[];
+  approval_queue?: AuditEntry[];
+  counts_by_action?: Record<string, number>;
+  counts_by_status?: Record<string, number>;
+  cron_jobs?: unknown[];
+  total_mutations?: number;
+  [extra: string]: unknown;
+}
+
 export const api = {
   platformStats: () => fetchJson<PlatformStats>("/api/admin/platform/stats"),
   clients: () => fetchJson<ProfileMeta[]>("/api/admin/clients"),
   client: (slug: string) =>
-    fetchJson<Record<string, unknown>>(
+    fetchJson<ClientDetail>(
       `/api/admin/clients/${encodeURIComponent(slug)}`,
     ),
   approvals: () => fetchJson<AuditEntry[]>("/api/admin/approvals"),
