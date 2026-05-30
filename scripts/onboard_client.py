@@ -150,6 +150,10 @@ def build_config(intake: dict) -> dict:
         "terminal": {"cwd": str(Path(client.get("workspace", "workspace")))},
         "platforms": {
             "webhook": {
+                # Hermes gateway only starts the HTTP listener for platforms with
+                # enabled: true. Without this flag the gateway runs cron-only and
+                # /webhooks/* returns 502 at the Caddy layer.
+                "enabled": True,
                 "extra": {
                     # `port` is injected by main() after allocate_port() (registry-based,
                     # collision-free; same slug always gets the same port).
