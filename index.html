@@ -3,546 +3,557 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>FullThrottle — AI Automation at Redline</title>
+<title>FullThrottle — Broadcast</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 <style>
-  /* ── Hermes-derived Design Tokens ── */
+  /* ── Hermes Design Tokens ── */
   :root {
-    /* Canvas — deep teal-ember hybrid, tinted not pure black */
-    --bg-root: #071010;
-    --bg-surface: #0c1a18;
-    --bg-elevated: #112420;
-    --bg-card: #0e1c1a;
-
-    /* Text — warm cream like Hermes midground */
-    --text-primary: #ffe6cb;
-    --text-secondary: #b8a68e;
-    --text-muted: #6b6054;
-
-    /* Accent — amber glow, pushed hotter than Hermes default */
-    --accent: #f59e0b;
-    --accent-glow: rgba(245, 158, 11, 0.28);
-    --accent-strong: #fbbf24;
-
-    /* Borders — subtle, never harsh */
-    --border-subtle: rgba(255, 230, 203, 0.06);
-    --border-visible: rgba(255, 230, 203, 0.10);
-    --border-active: rgba(245, 158, 11, 0.25);
-
-    /* Layout tokens */
-    --radius-sm: 0.375rem;
-    --radius-md: 0.5rem;
-    --radius-lg: 0.75rem;
-    --max-width: 1100px;
-
-    /* Typography */
-    --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
-    --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+    --background: #041c1c;
+    --background-base: #041c1c;
+    --midground: #ffe6cb;
+    --midground-base: #ffe6cb;
+    --warm-glow: rgba(255, 189, 56, 0.35);
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+    --radius: 0.5rem;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   html {
-    scroll-behavior: smooth;
-    background: var(--bg-root);
-    color: var(--text-primary);
+    background: var(--background);
+    color: var(--midground);
     font-family: var(--font-sans);
     font-size: 15px;
     line-height: 1.55;
     -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 
-  body {
-    min-height: 100vh;
+  body { min-height: 100vh; }
+
+  /* ── Grain texture overlay ── */
+  body::after {
+    content: '';
+    position: fixed; inset: 0; z-index: 9999; pointer-events: none;
+    opacity: 0.12;
+    background: repeating-conic-gradient(currentColor 0% 25%, transparent 0% 50%) 0 0 / 2px 2px;
+  }
+
+  /* ── Vignette ── */
+  .vignette {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
     background:
-      radial-gradient(ellipse 60% 40% at 50% 0%, rgba(245, 158, 11, 0.06) 0%, transparent 60%),
-      radial-gradient(ellipse 50% 30% at 80% 100%, rgba(245, 158, 11, 0.04) 0%, transparent 60%),
-      var(--bg-root);
+      radial-gradient(ellipse at 0% 0%, rgba(255,189,56,0.35) 0%, rgba(255,189,56,0) 60%),
+      radial-gradient(ellipse at 100% 100%, rgba(255,189,56,0.15) 0%, rgba(255,189,56,0) 50%);
+    mix-blend-mode: lighten;
+    opacity: 0.22;
   }
 
-  /* ── Navigation ── */
+  /* ── Layout ── */
+  .page { position: relative; z-index: 1; }
+
+  /* ── Nav ── */
   nav {
     position: fixed; top: 0; left: 0; right: 0; z-index: 100;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 2rem;
-    height: 52px;
+    height: 3.5rem; padding: 0 1.5rem;
     border-bottom: 1px solid transparent;
-    transition: background 0.25s, border-color 0.25s, backdrop-filter 0.25s;
+    transition: background 0.25s, border-color 0.25s;
   }
   nav.scrolled {
-    background: rgba(7, 16, 16, 0.88);
+    background: color-mix(in srgb, var(--background-base) 88%, transparent);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border-bottom-color: var(--border-subtle);
+    border-bottom-color: var(--midground);
+    border-bottom-color: color-mix(in srgb, var(--midground-base) 10%, transparent);
   }
 
   .nav-logo {
     font-family: var(--font-mono);
-    font-size: 0.85rem; font-weight: 700;
-    letter-spacing: 0.02em;
-    color: var(--text-primary);
+    font-size: 0.8rem; font-weight: 700;
+    color: var(--midground);
     text-decoration: none;
+    display: flex; align-items: center; gap: 0.5rem;
   }
-  .nav-logo span { color: var(--accent); }
+  .nav-logo::before {
+    content: '';
+    width: 8px; height: 8px;
+    background: var(--midground);
+    opacity: 0.7;
+    border-radius: 2px;
+  }
 
   .nav-links {
-    display: flex; align-items: center; gap: 1.75rem;
+    display: flex; align-items: center; gap: 1.5rem;
     list-style: none;
+    font-size: 0.78rem; font-weight: 500;
   }
   .nav-links a {
-    font-size: 0.8rem; font-weight: 500;
-    color: var(--text-secondary);
+    color: color-mix(in srgb, var(--midground-base) 60%, transparent);
     text-decoration: none;
     transition: color 0.15s;
   }
-  .nav-links a:hover { color: var(--text-primary); }
+  .nav-links a:hover { color: var(--midground); }
 
   .nav-cta {
     font-family: var(--font-mono);
-    font-size: 0.75rem; font-weight: 600;
-    color: var(--bg-root);
-    background: var(--accent);
-    padding: 0.45rem 1rem;
-    border-radius: var(--radius-sm);
+    font-size: 0.7rem; font-weight: 600;
+    color: var(--background-base);
+    background: var(--midground);
+    padding: 0.35rem 0.85rem;
+    border-radius: calc(var(--radius) * 0.5);
     text-decoration: none;
-    transition: background 0.15s, box-shadow 0.15s;
+    transition: opacity 0.15s;
   }
-  .nav-cta:hover {
-    background: var(--accent-strong);
-    box-shadow: 0 0 24px var(--accent-glow);
-  }
+  .nav-cta:hover { opacity: 0.85; }
 
-  /* ── Section shared ── */
-  .section {
-    max-width: var(--max-width);
-    margin: 0 auto;
-    padding: 0 2rem;
-  }
+  /* ── Sections ── */
+  .sec { max-width: 960px; margin: 0 auto; padding: 0 1.5rem; }
 
   /* ── Hero ── */
-  .hero-wrap {
-    padding: 8rem 0 5rem;
-    position: relative;
-  }
-  .hero-wrap .section {
-    display: flex; flex-direction: column; align-items: flex-start;
+  .hero { padding: 7rem 0 4rem; }
+  .hero-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 3rem; align-items: start;
   }
 
-  .hero-eyebrow {
+  .hero-badge {
     display: inline-flex; align-items: center; gap: 0.5rem;
     font-family: var(--font-mono);
-    font-size: 0.7rem; font-weight: 500;
+    font-size: 0.65rem; font-weight: 500;
     letter-spacing: 0.06em;
     text-transform: uppercase;
-    color: var(--accent);
-    border: 1px solid var(--border-active);
-    padding: 0.3rem 0.75rem;
-    border-radius: var(--radius-sm);
+    color: var(--midground);
+    opacity: 0.7;
+    border: 1px solid color-mix(in srgb, var(--midground-base) 20%, transparent);
+    padding: 0.25rem 0.65rem;
+    border-radius: calc(var(--radius) * 0.5);
     margin-bottom: 1.5rem;
   }
-  .hero-eyebrow::before {
+  .hero-badge::before {
     content: '';
     width: 5px; height: 5px;
-    background: var(--accent);
+    background: var(--midground);
     border-radius: 50%;
-    box-shadow: 0 0 8px var(--accent-glow);
+    opacity: 0.8;
+    animation: pulse 2s ease-in-out infinite;
   }
+  @keyframes pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
 
   .hero h1 {
-    font-size: clamp(2.5rem, 6.5vw, 4.5rem);
+    font-size: clamp(2.2rem, 5vw, 3.5rem);
     font-weight: 800;
     line-height: 1.05;
-    letter-spacing: -0.025em;
-    color: var(--text-primary);
-    max-width: 780px;
+    letter-spacing: -0.02em;
+    color: var(--midground);
   }
-  .hero h1 mark {
-    background: none;
-    color: var(--accent);
-    text-shadow: 0 0 48px var(--accent-glow);
+  .hero h1 em {
+    font-style: normal;
+    color: color-mix(in srgb, var(--midground-base) 70%, transparent);
   }
 
   .hero-desc {
-    font-size: 1.05rem;
-    color: var(--text-secondary);
-    max-width: 480px;
-    margin-top: 1.25rem;
+    font-size: 0.9rem;
+    color: color-mix(in srgb, var(--midground-base) 55%, transparent);
+    margin-top: 1rem;
     line-height: 1.6;
+    max-width: 380px;
   }
 
   .hero-actions {
-    display: flex; gap: 0.75rem;
-    margin-top: 1.75rem;
+    display: flex; gap: 0.65rem;
+    margin-top: 1.5rem;
   }
 
   .btn-primary {
     font-family: var(--font-mono);
-    font-size: 0.8rem; font-weight: 600;
-    color: var(--bg-root);
-    background: var(--accent);
-    padding: 0.6rem 1.5rem;
+    font-size: 0.75rem; font-weight: 600;
+    color: var(--background-base);
+    background: var(--midground);
+    padding: 0.5rem 1.25rem;
     border: none;
-    border-radius: var(--radius-sm);
+    border-radius: calc(var(--radius) * 0.5);
     cursor: pointer;
     text-decoration: none;
-    transition: background 0.15s, box-shadow 0.15s, transform 0.12s;
+    transition: opacity 0.15s, box-shadow 0.15s;
   }
   .btn-primary:hover {
-    background: var(--accent-strong);
-    box-shadow: 0 0 28px var(--accent-glow);
-    transform: translateY(-1px);
+    opacity: 0.88;
+    box-shadow: 0 0 24px var(--warm-glow);
   }
 
   .btn-ghost {
     font-family: var(--font-mono);
-    font-size: 0.8rem; font-weight: 500;
-    color: var(--text-secondary);
+    font-size: 0.75rem; font-weight: 500;
+    color: var(--midground);
+    opacity: 0.7;
     background: transparent;
-    padding: 0.6rem 1.5rem;
-    border: 1px solid var(--border-visible);
-    border-radius: var(--radius-sm);
+    padding: 0.5rem 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--midground-base) 15%, transparent);
+    border-radius: calc(var(--radius) * 0.5);
     cursor: pointer;
     text-decoration: none;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
+    transition: opacity 0.15s, border-color 0.15s;
   }
   .btn-ghost:hover {
-    border-color: var(--border-active);
-    color: var(--text-primary);
-    background: rgba(255, 230, 203, 0.03);
+    opacity: 1;
+    border-color: color-mix(in srgb, var(--midground-base) 30%, transparent);
   }
 
-  /* ── Terminal Code Block (hero accent) ── */
-  .hero-terminal {
-    margin-top: 2rem;
-    width: 100%;
-    max-width: 440px;
-    background: var(--bg-elevated);
-    border: 1px solid var(--border-visible);
-    border-radius: var(--radius-md);
+  /* ── Terminal Panel (hero right) ── */
+  .term-panel {
+    border: 1px solid color-mix(in srgb, var(--midground-base) 12%, transparent);
+    border-radius: var(--radius);
     overflow: hidden;
+    position: relative;
+    background: color-mix(in srgb, var(--background-base) 95%, var(--midground-base));
   }
-  .hero-terminal .term-bar {
-    display: flex; align-items: center; gap: 0.4rem;
-    padding: 0.55rem 0.8rem;
-    border-bottom: 1px solid var(--border-subtle);
-    background: var(--bg-surface);
-  }
-  .term-dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: var(--border-visible);
-  }
-  .term-dot:first-child { background: #ef4444; }
-  .term-dot:nth-child(2) { background: #f59e0b; }
-  .term-dot:nth-child(3) { background: #22c55e; }
 
-  .hero-terminal pre {
-    padding: 0.8rem 1rem;
+  /* Scanline overlay on terminal */
+  .term-panel::after {
+    content: '';
+    position: absolute; inset: 0; pointer-events: none; z-index: 2;
+    opacity: 0.15;
+    mix-blend-mode: overlay;
+    background: repeating-linear-gradient(0deg, transparent 0, transparent 2px, rgba(255,255,255,0.08) 2px, rgba(255,255,255,0.08) 3px);
+  }
+
+  .term-bar {
+    display: flex; align-items: center; gap: 0.35rem;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid color-mix(in srgb, var(--midground-base) 8%, transparent);
     font-family: var(--font-mono);
-    font-size: 0.78rem;
-    color: var(--text-secondary);
-    line-height: 1.65;
-    overflow-x: auto;
-    white-space: pre;
+    font-size: 0.65rem;
+    color: color-mix(in srgb, var(--midground-base) 40%, transparent);
+    position: relative; z-index: 3;
   }
-  .hero-terminal pre .cmd  { color: var(--accent); }
-  .hero-terminal pre .arg  { color: var(--text-primary); }
-  .hero-terminal pre .out  { color: var(--text-muted); }
+  .term-dot { width: 6px; height: 6px; border-radius: 50%; background: color-mix(in srgb, var(--midground-base) 25%, transparent); }
+  .term-dot:first-child { background: color-mix(in srgb, var(--midground-base) 50%, transparent); }
+  .term-bar .rec {
+    display: flex; align-items: center; gap: 0.35rem;
+    margin-left: auto;
+    font-size: 0.6rem;
+    opacity: 0.5;
+  }
+  .term-bar .rec::before {
+    content: '';
+    width: 5px; height: 5px;
+    background: var(--midground);
+    border-radius: 50%;
+    opacity: 0.6;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
 
-  /* ── Section headers ── */
+  .term-body {
+    padding: 0.75rem 0.85rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    line-height: 1.65;
+    color: color-mix(in srgb, var(--midground-base) 60%, transparent);
+    position: relative; z-index: 3;
+  }
+  .term-body .hl { color: var(--midground); }
+  .term-body .dim { opacity: 0.45; }
+
+  /* Corner marks */
+  .corner-marks { position: absolute; inset: 8px; pointer-events: none; z-index: 4; }
+  .cm {
+    position: absolute; width: 12px; height: 12px; opacity: 0.3;
+  }
+  .cm::before, .cm::after {
+    content: '';
+    position: absolute;
+    background: var(--midground);
+  }
+  .cm-tl { top: 0; left: 0; }
+  .cm-tr { top: 0; right: 0; }
+  .cm-bl { bottom: 0; left: 0; }
+  .cm-br { bottom: 0; right: 0; }
+  .cm::before { width: 100%; height: 1px; top: 50%; transform: translateY(-50%); }
+  .cm::after { height: 100%; width: 1px; left: 50%; transform: translateX(-50%); }
+
+  /* ── Capabilities ── */
+  .caps { padding: 5rem 0; border-top: 1px solid color-mix(in srgb, var(--midground-base) 8%, transparent); }
   .sec-label {
     font-family: var(--font-mono);
-    font-size: 0.7rem; font-weight: 500;
-    letter-spacing: 0.06em;
+    font-size: 0.65rem; font-weight: 500;
+    letter-spacing: 0.05em;
     text-transform: uppercase;
-    color: var(--accent);
+    color: var(--midground);
+    opacity: 0.5;
     margin-bottom: 0.75rem;
+    display: flex; align-items: center; gap: 0.5rem;
   }
-  .sec-title {
-    font-size: clamp(1.6rem, 3.5vw, 2.2rem);
-    font-weight: 700;
-    letter-spacing: -0.015em;
-    line-height: 1.15;
-    color: var(--text-primary);
-  }
-  .sec-desc {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    max-width: 440px;
-    margin-top: 0.6rem;
+  .sec-label::after {
+    content: '';
+    flex: 1; height: 1px;
+    background: color-mix(in srgb, var(--midground-base) 10%, transparent);
   }
 
-  /* ── Capability Cards ── */
-  .capabilities {
-    padding: 5rem 0;
+  .sec-title {
+    font-size: 1.5rem; font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
+    color: var(--midground);
   }
-  .cap-header {
-    margin-bottom: 2.5rem;
+  .sec-desc {
+    font-size: 0.82rem;
+    color: color-mix(in srgb, var(--midground-base) 50%, transparent);
+    margin-top: 0.35rem;
   }
+
   .cap-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 1px;
-    background: var(--border-subtle);
-    border-radius: var(--radius-md);
+    margin-top: 2.5rem;
+    border: 1px solid color-mix(in srgb, var(--midground-base) 8%, transparent);
+    border-radius: var(--radius);
     overflow: hidden;
-    border: 1px solid var(--border-subtle);
   }
   .cap-card {
-    background: var(--bg-card);
-    padding: 1.75rem 1.5rem;
+    padding: 1.5rem 1.25rem;
+    border-right: 1px solid color-mix(in srgb, var(--midground-base) 6%, transparent);
+    border-bottom: 1px solid color-mix(in srgb, var(--midground-base) 6%, transparent);
+    background: color-mix(in srgb, var(--midground-base) 2%, var(--background-base));
     transition: background 0.2s;
+    position: relative;
   }
+  .cap-card:nth-child(3n) { border-right: none; }
+  .cap-card:nth-last-child(-n+3) { border-bottom: none; }
+
   .cap-card:hover {
-    background: var(--bg-elevated);
+    background: color-mix(in srgb, var(--midground-base) 4%, var(--background-base));
   }
-  .cap-icon {
+
+  .cap-idx {
     font-family: var(--font-mono);
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--accent);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    font-size: 0.6rem; font-weight: 500;
+    color: var(--midground);
+    opacity: 0.35;
     margin-bottom: 0.75rem;
-    display: inline-block;
-    padding: 0.15rem 0.5rem;
-    background: rgba(245, 158, 11, 0.08);
-    border-radius: var(--radius-sm);
   }
   .cap-card h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.4rem;
+    font-size: 0.95rem; font-weight: 600;
+    color: var(--midground);
+    margin-bottom: 0.3rem;
     letter-spacing: -0.01em;
   }
   .cap-card p {
-    font-size: 0.8rem;
-    color: var(--text-muted);
+    font-size: 0.75rem;
+    color: color-mix(in srgb, var(--midground-base) 45%, transparent);
     line-height: 1.6;
   }
 
-  /* ── Stats bar ── */
-  .stats {
-    padding: 4rem 0;
-    border-top: 1px solid var(--border-subtle);
-    border-bottom: 1px solid var(--border-subtle);
-    background: var(--bg-surface);
-  }
+  /* ── Stats ── */
+  .stats { padding: 3rem 0; border-top: 1px solid color-mix(in srgb, var(--midground-base) 8%, transparent); }
   .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 2rem;
-    align-items: center;
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: color-mix(in srgb, var(--midground-base) 8%, transparent);
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid color-mix(in srgb, var(--midground-base) 8%, transparent);
   }
   .stat-item {
-    text-align: center;
+    text-align: center; padding: 2rem 1rem;
+    background: var(--background);
   }
   .stat-value {
     font-family: var(--font-mono);
-    font-size: 2.4rem;
-    font-weight: 700;
-    color: var(--accent);
+    font-size: 2rem; font-weight: 700;
+    color: var(--midground);
     letter-spacing: -0.02em;
-    text-shadow: 0 0 30px var(--accent-glow);
   }
   .stat-label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--text-muted);
-    margin-top: 0.3rem;
+    font-size: 0.65rem; font-weight: 500;
+    color: color-mix(in srgb, var(--midground-base) 40%, transparent);
+    margin-top: 0.25rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
   }
 
   /* ── How It Works ── */
-  .how {
-    padding: 5rem 0;
-  }
-  .how-header {
-    margin-bottom: 2.5rem;
-  }
-  .how-list {
-    display: flex; flex-direction: column;
-    max-width: 600px;
-  }
+  .how { padding: 5rem 0; border-top: 1px solid color-mix(in srgb, var(--midground-base) 8%, transparent); }
+  .how-list { margin-top: 2rem; }
   .how-step {
-    display: flex; gap: 1.25rem;
-    padding: 1.25rem 0;
-    border-bottom: 1px solid var(--border-subtle);
+    display: flex; gap: 1rem;
+    padding: 1.1rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--midground-base) 6%, transparent);
   }
   .how-step:last-child { border-bottom: none; }
-  .step-idx {
+  .step-n {
     font-family: var(--font-mono);
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: var(--accent);
+    font-size: 0.65rem; font-weight: 600;
+    color: var(--midground);
+    opacity: 0.4;
     min-width: 1.5rem;
-    padding-top: 0.1rem;
+    padding-top: 0.15rem;
   }
   .step-text h4 {
-    font-size: 1rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: 0.25rem;
-    letter-spacing: -0.01em;
+    font-size: 0.9rem; font-weight: 600;
+    color: var(--midground);
+    margin-bottom: 0.15rem;
   }
   .step-text p {
-    font-size: 0.82rem;
-    color: var(--text-muted);
+    font-size: 0.75rem;
+    color: color-mix(in srgb, var(--midground-base) 45%, transparent);
     line-height: 1.6;
-  }
-
-  /* ── CTA ── */
-  .cta-section {
-    padding: 6rem 0;
-    background:
-      radial-gradient(ellipse 70% 50% at 50% 50%, rgba(245, 158, 11, 0.08) 0%, transparent 60%),
-      var(--bg-surface);
-    border-top: 1px solid var(--border-subtle);
-    text-align: center;
-  }
-  .cta-section .sec-title {
-    max-width: 560px;
-    margin: 0 auto;
-  }
-  .cta-section .sec-desc {
-    margin: 0.75rem auto 2rem;
-  }
-  .cta-section .btn-primary {
-    font-size: 0.85rem;
-    padding: 0.7rem 2rem;
   }
 
   /* ── Footer ── */
   footer {
-    padding: 2rem 0;
-    border-top: 1px solid var(--border-subtle);
-    font-size: 0.75rem;
-    color: var(--text-muted);
+    padding: 1.5rem 0;
+    border-top: 1px solid color-mix(in srgb, var(--midground-base) 8%, transparent);
+    font-size: 0.7rem;
+    color: color-mix(in srgb, var(--midground-base) 35%, transparent);
   }
-  footer .section {
+  footer .sec {
     display: flex; justify-content: space-between; align-items: center;
-    flex-wrap: wrap; gap: 0.75rem;
+    flex-wrap: wrap; gap: 0.5rem;
   }
-  .footer-logo {
+  .footer-clock {
     font-family: var(--font-mono);
-    font-weight: 700;
-    color: var(--text-primary);
+    font-size: 0.65rem;
+    opacity: 0.4;
   }
-  .footer-logo span { color: var(--accent); }
+
+  /* ── CTA ── */
+  .cta-sec { padding: 5rem 0; border-top: 1px solid color-mix(in srgb, var(--midground-base) 8%, transparent); text-align: center; }
+  .cta-sec .sec-title { max-width: 500px; margin: 0 auto; }
+  .cta-sec .sec-desc { margin: 0.5rem auto 1.5rem; max-width: 400px; }
 
   /* ── Responsive ── */
-  @media (max-width: 900px) {
+  @media (max-width: 800px) {
+    .hero-grid { grid-template-columns: 1fr; gap: 2rem; }
     .cap-grid { grid-template-columns: 1fr 1fr; }
-    .stats-grid { grid-template-columns: 1fr; gap: 1.25rem; }
+    .cap-card:nth-child(3n) { border-right: 1px solid color-mix(in srgb, var(--midground-base) 6%, transparent); }
+    .cap-card:nth-child(2n) { border-right: none; }
+    .cap-card:nth-last-child(-n+3) { border-bottom: 1px solid color-mix(in srgb, var(--midground-base) 6%, transparent); }
+    .cap-card:nth-last-child(-n+2) { border-bottom: none; }
+    .stats-grid { grid-template-columns: 1fr; }
   }
-  @media (max-width: 600px) {
-    .hero-wrap { padding: 6rem 0 3rem; }
-    .section { padding: 0 1.25rem; }
+  @media (max-width: 500px) {
+    .hero { padding: 5rem 0 2rem; }
+    .sec { padding: 0 1rem; }
     .cap-grid { grid-template-columns: 1fr; }
-    .hero-actions { flex-direction: column; width: 100%; }
+    .cap-card { border-right: none !important; }
+    .cap-card:nth-last-child(-n+2) { border-bottom: 1px solid color-mix(in srgb, var(--midground-base) 6%, transparent); }
+    .cap-card:last-child { border-bottom: none; }
+    .hero-actions { flex-direction: column; }
     .hero-actions .btn-primary,
-    .hero-actions .btn-ghost { width: 100%; text-align: center; }
-    .hero-terminal { max-width: 100%; }
-    .hero-terminal pre { font-size: 0.7rem; }
-    nav { padding: 0 1.25rem; }
+    .hero-actions .btn-ghost { text-align: center; }
+    nav { padding: 0 1rem; }
     .nav-links { display: none; }
-    .hero h1 { font-size: 2rem; }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after {
-      animation-duration: 0.01ms !important;
-      animation-iteration-count: 1 !important;
-      transition-duration: 0.01ms !important;
-    }
+    .hero-badge::before, .term-bar .rec::before { animation: none; opacity: 0.6; }
   }
 </style>
 </head>
 <body>
+<div class="vignette"></div>
+<div class="page">
 
 <!-- Navigation -->
 <nav id="nav">
-  <a href="#" class="nav-logo">full<span>throttle</span></a>
+  <a href="#" class="nav-logo">fullthrottle</a>
   <ul class="nav-links">
-    <li><a href="#capabilities">Capabilities</a></li>
-    <li><a href="#how">How It Works</a></li>
-    <li><a href="#cta" class="nav-cta">Get Access</a></li>
+    <li><a href="#caps">Capabilities</a></li>
+    <li><a href="#how">How</a></li>
+    <li><a href="#cta" class="nav-cta">Access</a></li>
   </ul>
 </nav>
 
 <!-- Hero -->
-<div class="hero-wrap">
-  <div class="section">
-    <div class="hero-eyebrow">Early Access — Beta</div>
-    <h1>Automate at <mark>full throttle</mark></h1>
-    <p class="hero-desc">
-      Per-client AI agents that handle outreach, content, and operations. 
-      One command to spin up a dedicated automation engine for every account.
-    </p>
-    <div class="hero-actions">
-      <a href="#cta" class="btn-primary">Start Building</a>
-      <a href="#how" class="btn-ghost">How It Works</a>
-    </div>
-
-    <!-- Terminal snippet — Hermes dashboard DNA -->
-    <div class="hero-terminal">
-      <div class="term-bar">
-        <span class="term-dot"></span>
-        <span class="term-dot"></span>
-        <span class="term-dot"></span>
+<div class="hero" id="top">
+  <div class="sec">
+    <div class="hero-grid">
+      <div>
+        <div class="hero-badge">Channel Active</div>
+        <h1>Automate at <em>full throttle</em></h1>
+        <p class="hero-desc">
+          Per-client AI agents. One command provisions a dedicated
+          Hermes profile &mdash; memory, tools, credentials &mdash;
+          ready to execute your playbooks.
+        </p>
+        <div class="hero-actions">
+          <a href="#cta" class="btn-primary">Initialize</a>
+          <a href="#how" class="btn-ghost">View Protocol</a>
+        </div>
       </div>
-      <pre><span class="cmd">hermes</span> <span class="arg">profile create acme-corp</span>
-<span class="out">✓  Profile "acme-corp" created</span>
-<span class="out">✓  Memory store initialized</span>
-<span class="out">✓  Tools configured (web, social, email)</span>
-<span class="cmd">hermes</span> <span class="arg">profile run acme-corp</span> <span class="arg">--playbook outreach</span>
-<span class="out">⚡ Agent running at full throttle...</span></pre>
+
+      <!-- Terminal panel with broadcast styling -->
+      <div class="term-panel">
+        <div class="corner-marks">
+          <span class="cm cm-tl"></span>
+          <span class="cm cm-tr"></span>
+          <span class="cm cm-bl"></span>
+          <span class="cm cm-br"></span>
+        </div>
+        <div class="term-bar">
+          <span class="term-dot"></span>
+          <span class="term-dot"></span>
+          <span class="term-dot"></span>
+          terminal&nbsp;&mdash;&nbsp;profile:acme-corp
+          <span class="rec">REC</span>
+        </div>
+        <div class="term-body">
+<span class="dim">$</span> hermes profile create acme-corp
+<span class="dim">  profile:</span> <span class="hl">acme-corp</span> <span class="dim">created</span>
+<span class="dim">  memory:</span>  <span class="hl">initialized</span> <span class="dim">(isolated store)</span>
+<span class="dim">  tools:</span>   <span class="hl">web, social, email, crm</span>
+
+<span class="dim">$</span> hermes profile run acme-corp \
+    <span class="dim">--playbook</span> <span class="hl">outreach</span>
+
+<span class="dim">  agent at full throttle</span>
+<span class="dim">  scanning acme-corp.com</span>
+<span class="dim">  ████████████████</span> <span class="hl">100%</span>
+<span class="dim">  intelligence gathered</span>
+        </div>
+      </div>
     </div>
   </div>
 </div>
 
 <!-- Capabilities -->
-<div class="capabilities" id="capabilities">
-  <div class="section">
-    <div class="cap-header">
-      <div class="sec-label">Capabilities</div>
-      <h2 class="sec-title">Built for relentless execution</h2>
-      <p class="sec-desc">No fluff, no filler — just what you need to run client ops at maximum velocity.</p>
-    </div>
+<div class="caps" id="caps">
+  <div class="sec">
+    <div class="sec-label">Capabilities</div>
+    <h2 class="sec-title">Built for relentless execution</h2>
+    <p class="sec-desc">No fluff. No filler. Just what you need to run client ops at redline.</p>
 
     <div class="cap-grid">
       <div class="cap-card">
-        <div class="cap-icon">profiles</div>
+        <div class="cap-idx">001</div>
         <h3>Per-Client Agents</h3>
-        <p>Isolated Hermes profiles — each client gets their own memory, tools, and credentials. No cross-contamination, no shared state.</p>
+        <p>Isolated Hermes profiles &mdash; each client gets their own memory, tools, and credentials. No cross-contamination.</p>
       </div>
       <div class="cap-card">
-        <div class="cap-icon">social</div>
+        <div class="cap-idx">002</div>
         <h3>Social Automation</h3>
-        <p>LinkedIn posting, engagement tracking, and content scheduling — driven by per-client playbooks, not templates.</p>
+        <p>LinkedIn posting, engagement tracking, content scheduling &mdash; driven by playbooks, not templates.</p>
       </div>
       <div class="cap-card">
-        <div class="cap-icon">intel</div>
+        <div class="cap-idx">003</div>
         <h3>Web Intelligence</h3>
-        <p>Agents visit client sites, extract value props, analyze competitors, and surface actionable insights — all hands-free.</p>
+        <p>Agents visit client sites, extract value props, analyze competitors &mdash; hands-free reconnaissance.</p>
       </div>
       <div class="cap-card">
-        <div class="cap-icon">outreach</div>
+        <div class="cap-idx">004</div>
         <h3>Smart Outreach</h3>
-        <p>Multi-channel sequences that adapt to engagement. No spray-and-pray — every message is context-aware.</p>
+        <p>Multi-channel sequences that adapt to engagement signals. Every message is context-aware.</p>
       </div>
       <div class="cap-card">
-        <div class="cap-icon">content</div>
+        <div class="cap-idx">005</div>
         <h3>Content Engine</h3>
-        <p>Generate proposals, case studies, and posts from raw client data. Your voice, amplified — not replaced.</p>
+        <p>Generate proposals, case studies, posts from raw client data. Your voice, amplified.</p>
       </div>
       <div class="cap-card">
-        <div class="cap-icon">sandbox</div>
+        <div class="cap-idx">006</div>
         <h3>Secure Isolation</h3>
-        <p>Encrypted credential storage per profile. What happens in one client profile stays in one client profile.</p>
+        <p>Encrypted credential storage per profile. What happens in one client stays in one client.</p>
       </div>
     </div>
   </div>
@@ -550,7 +561,7 @@
 
 <!-- Stats -->
 <div class="stats">
-  <div class="section">
+  <div class="sec">
     <div class="stats-grid">
       <div class="stat-item">
         <div class="stat-value">24/7</div>
@@ -558,11 +569,11 @@
       </div>
       <div class="stat-item">
         <div class="stat-value">100+</div>
-        <div class="stat-label">Client Profiles Running</div>
+        <div class="stat-label">Client Profiles</div>
       </div>
       <div class="stat-item">
         <div class="stat-value">&lt;5 min</div>
-        <div class="stat-label">New Client Onboarding</div>
+        <div class="stat-label">Client Onboarding</div>
       </div>
     </div>
   </div>
@@ -570,29 +581,27 @@
 
 <!-- How It Works -->
 <div class="how" id="how">
-  <div class="section">
-    <div class="how-header">
-      <div class="sec-label">How It Works</div>
-      <h2 class="sec-title">Three steps. One command.</h2>
-      <p class="sec-desc">No engineering team, no DevOps, no ceremony.</p>
-    </div>
+  <div class="sec">
+    <div class="sec-label">Protocol</div>
+    <h2 class="sec-title">Three steps. One command.</h2>
+    <p class="sec-desc">No engineering team. No DevOps. No ceremony.</p>
     <div class="how-list">
       <div class="how-step">
-        <div class="step-idx">01</div>
+        <div class="step-n">01</div>
         <div class="step-text">
           <h4>Create a profile</h4>
-          <p>One command provisions an isolated Hermes agent for your client. Memory, tools, credentials — all scoped and sandboxed.</p>
+          <p>One command provisions an isolated Hermes agent. Memory, tools, credentials &mdash; scoped and sandboxed.</p>
         </div>
       </div>
       <div class="how-step">
-        <div class="step-idx">02</div>
+        <div class="step-n">02</div>
         <div class="step-text">
           <h4>Wire the data</h4>
-          <p>Connect the agent to client websites, social accounts, and data sources. It learns their industry and tone — automatically.</p>
+          <p>Connect to client websites, socials, data sources. The agent learns their industry and tone &mdash; automatically.</p>
         </div>
       </div>
       <div class="how-step">
-        <div class="step-idx">03</div>
+        <div class="step-n">03</div>
         <div class="step-text">
           <h4>Run the playbook</h4>
           <p>Define outreach sequences, content calendars, monitoring jobs. The agent executes. You review the dashboard.</p>
@@ -603,28 +612,33 @@
 </div>
 
 <!-- CTA -->
-<div class="cta-section" id="cta">
-  <div class="section">
+<div class="cta-sec" id="cta">
+  <div class="sec">
     <h2 class="sec-title">Ready to run flat out?</h2>
-    <p class="sec-desc">Stop doing things machines should handle. Get an automation stack that scales with your ambition.</p>
-    <a href="#" class="btn-primary">Get Early Access</a>
+    <p class="sec-desc">Stop doing things machines should handle. Get a stack that scales with your ambition.</p>
+    <a href="#" class="btn-primary" style="font-size:0.8rem; padding:0.6rem 1.75rem;">Initialize</a>
   </div>
 </div>
 
 <!-- Footer -->
 <footer>
-  <div class="section">
-    <div class="footer-logo">full<span>throttle</span></div>
-    <div>&copy; 2026 FullThrottle</div>
+  <div class="sec">
+    <span style="font-family:var(--font-mono); font-weight:600; font-size:0.72rem;">fullthrottle</span>
+    <span class="footer-clock" id="clock">--:--:-- UTC</span>
+    <span style="opacity:0.3;">MIT &middot; 2026</span>
   </div>
 </footer>
 
+</div><!-- /page -->
+
 <script>
+  // Nav scroll
   const nav = document.getElementById('nav');
   window.addEventListener('scroll', () => {
-    nav.classList.toggle('scrolled', window.scrollY > 20);
+    nav.classList.toggle('scrolled', window.scrollY > 10);
   });
 
+  // Anchor smooth scroll
   document.querySelectorAll('a[href^="#"]').forEach(link => {
     link.addEventListener('click', e => {
       const target = document.querySelector(link.getAttribute('href'));
@@ -634,7 +648,14 @@
       }
     });
   });
-</script>
 
+  // UTC clock
+  const clock = document.getElementById('clock');
+  function tick() {
+    clock.textContent = new Date().toISOString().slice(11, 19) + ' UTC';
+  }
+  tick();
+  setInterval(tick, 1000);
+</script>
 </body>
 </html>
