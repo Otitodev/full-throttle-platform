@@ -73,7 +73,9 @@ FRAGMENT_CONTENT=$(cat <<EOF
 ${HOST} {
 	reverse_proxy 127.0.0.1:${PORT}
 	respond /healthz "ok" 200
-	request_body { max_size 1MB }
+	request_body {
+		max_size 1MB
+	}
 	log {
 		output file /var/log/full-throttle/${SLUG}-access.log {
 			roll_size 10mb
