@@ -22,13 +22,26 @@ SECRETS="${ROOT}/mrfence.secrets.json"
 
 RUN=0
 FORCE=0
+PROVIDER="anthropic"
+MODEL=""
 while [ $# -gt 0 ]; do
   case "$1" in
-    --run)   RUN=1; shift ;;
-    --force) FORCE=1; shift ;;
+    --run)      RUN=1; shift ;;
+    --force)    FORCE=1; shift ;;
+    --openai)   PROVIDER="openai"; shift ;;
+    --anthropic)PROVIDER="anthropic"; shift ;;
+    --model)    MODEL="$2"; shift 2 ;;
     *) echo "unknown arg: $1" >&2; exit 2 ;;
   esac
 done
+
+# Sensible default model per provider unless --model overrides.
+if [ -z "$MODEL" ]; then
+  case "$PROVIDER" in
+    openai)    MODEL="gpt-4o" ;;
+    anthropic) MODEL="claude-sonnet-4-6" ;;
+  esac
+fi
 
 if [ "$(id -u)" -ne 0 ]; then
   echo "run as root (sudo)" >&2; exit 1
@@ -66,9 +79,12 @@ cat > "$INTAKE" <<'JSON'
     "public_base_domain": "hooks.138.197.7.87.nip.io"
   },
   "crm": { "provider": "manual" },
-  "model": { "provider": "anthropic", "model": "claude-sonnet-4-6" }
+  "model": { "provider": "__PROVIDER__", "model": "__MODEL__" }
 }
 JSON
+# Substitute the provider/model template after the heredoc — the heredoc body
+# is quoted ('JSON') so $vars aren't expanded inside it.
+sed -i "s|__PROVIDER__|${PROVIDER}|; s|__MODEL__|${MODEL}|" "$INTAKE"
 chown hermes:hermes "$INTAKE"
 
 # --------------------------------------------------------------------------
