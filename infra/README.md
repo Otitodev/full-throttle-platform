@@ -95,6 +95,75 @@ sudo systemctl reload caddy
 # Profile + port registry stay (audit trail). Remove manually if you really need to.
 ```
 
+## Smoke-test the deployment (no real client needed)
+
+`scripts/test_onboard.sh` provisions a throwaway `smoke` profile with a placeholder
+API key and a fake phone number. Useful right after `install_server.sh` to prove
+the chain works before pointing real customer traffic at the box:
+
+```bash
+sudo bash scripts/test_onboard.sh
+# returns: profile created, webhook port allocated, summary JSON
+sudo bash infra/promote_client.sh smoke --base-domain hooks.$(curl -s -4 ifconfig.me).nip.io
+# returns: Caddy fragment written, systemd unit enabled, TLS cert obtained
+```
+
+Verify all layers:
+```bash
+# Caddy serving + TLS valid
+curl -fsSI https://smoke.hooks.<ip>.nip.io/healthz
+# Gateway listening on its allocated port
+ss -tlnp | grep $(grep '^\s*port:' ~hermes/.hermes/profiles/smoke/config.yaml | awk '{print $2}')
+# Webhook end-to-end: signed POST → 202 accepted
+BODY='{"name":"x"}'
+SECRET=$(sudo -u hermes python3 -c "import json,pathlib; print(json.loads(pathlib.Path('/home/hermes/test.secrets.json').read_text())['webhook_lead_secret'])")
+SIG=$(printf '%s' "$BODY" | openssl dgst -sha256 -hmac "$SECRET" -hex | awk '{print $2}')
+curl -sS -i -X POST -H "Content-Type: application/json" -H "X-Webhook-Signature: $SIG" \
+    -d "$BODY" https://smoke.hooks.<ip>.nip.io/webhooks/lead
+```
+
+Teardown when done:
+```bash
+sudo systemctl disable --now hermes-gateway@smoke
+sudo rm /etc/full-throttle/caddy.d/smoke.caddy
+sudo systemctl reload caddy
+sudo rm -rf /home/hermes/.hermes/profiles/smoke
+```
+
+## Gotchas (caught during first real droplet validation)
+
+Things that bit us provisioning the first droplet. All are now fixed in the
+scripts, but if you're debugging an install they're worth knowing:
+
+1. **Reserved profile slugs**. Hermes blocks `test`, `default`, and anything
+   colliding with a system binary. Pick a slug that's specific to the client
+   (e.g. `mrfence`, never `test`/`demo`/`temp`).
+2. **`ifconfig.me` returns IPv6 first** if your droplet has dual stack. nip.io
+   only handles IPv4-shaped subdomains; colons also break the Caddy host
+   parser. Always use `curl -s -4 ifconfig.me` when scripting the IP.
+3. **Caddy `request_body` body must be on separate lines** — `request_body
+   { max_size 1MB }` on one line fails parse with "Unexpected next token
+   after '{'". (Fixed in `promote_client.sh`.)
+4. **`/var/log/full-throttle/` must be writable by `caddy:caddy`**, not
+   `hermes:hermes` — Caddy writes per-client access logs there. (Fixed in
+   `install_server.sh`.)
+5. **`email ops@example.com` placeholder kills cert issuance**. Let's Encrypt
+   rejects `example.com` as a forbidden contact domain → Caddy falls back to
+   ZeroSSL → ZeroSSL rejects too many DNS labels in nip.io hostnames. Leave
+   the email line out (works fine) or set a real one. (Fixed in
+   `infra/caddy/Caddyfile`.)
+6. **`systemctl reload caddy` doesn't always pick up global-block changes**
+   (e.g. removing the `email` directive). In-memory ACME state survives.
+   Use `systemctl restart caddy` after editing the global block.
+7. **Webhook adapter needs `enabled: true` + a concrete `secret`**. The
+   gateway loads only platforms with `enabled: true`, and the webhook
+   adapter reads `route.secret` literally — no env interpolation. Onboarding
+   now writes both. (Fixed in `scripts/onboard_client.py`.)
+8. **Heredocs and `python3 -c` get auto-indented over SSH** on many terminal
+   setups (bracketed paste / autoindent), which kills heredocs (`EOF` at
+   non-column-0) and Python (`IndentationError`). Prefer one-liner commands,
+   or upload a script (`scripts/test_onboard.sh` exists for this reason).
+
 ## What this packaging does NOT do (by design)
 
 - **DNS provisioning**: you create the `*.hooks.<domain>` wildcard A record yourself.
