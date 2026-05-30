@@ -101,7 +101,11 @@ step_hermes() {
 step_dirs() {
   log "creating /etc/full-throttle and /var/log/full-throttle"
   mkdir -p /etc/full-throttle/caddy.d /var/log/full-throttle
-  chown -R hermes:hermes /var/log/full-throttle
+  # Caddy (from the deb package) runs as caddy:caddy and writes per-client
+  # access logs here; hermes never writes here.
+  if id caddy >/dev/null 2>&1; then
+    chown -R caddy:caddy /var/log/full-throttle
+  fi
 }
 
 step_caddyfile() {
