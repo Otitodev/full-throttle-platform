@@ -6,8 +6,10 @@
 # certs via HTTP-01 as each client is promoted.
 
 {
-	# Replace before running in production.
-	email ops@example.com
+	# Optional: set a contact email for Let's Encrypt expiry notifications.
+	# DO NOT use example.com — Let's Encrypt rejects it as a forbidden domain.
+	# If FT_ACME_EMAIL is unset Caddy proceeds without a contact (still works).
+	email {$FT_ACME_EMAIL}
 	# Use Let's Encrypt prod; staging endpoint is commented for cert-debugging:
 	# acme_ca https://acme-staging-v02.api.letsencrypt.org/directory
 }
