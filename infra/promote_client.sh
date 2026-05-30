@@ -71,11 +71,32 @@ log "unit:        hermes-gateway@${SLUG}.service"
 
 FRAGMENT_CONTENT=$(cat <<EOF
 ${HOST} {
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	# Owner-dashboard API → the central aggregator (binds 127.0.0.1:9201).
+	# Auth is per-profile Bearer (FT_DASHBOARD_TOKEN); aggregator enforces it.
+	handle /api/client/* {
+		reverse_proxy 127.0.0.1:9201
+	}
+
+	# Owner dashboard SPA at /dash/*. The Vite build's base is "/dash/" so
+	# all asset URLs already start with /dash/; handle_path strips that
+	# prefix before file_server resolves against dist/.
+	handle_path /dash/* {
+		root * /srv/full-throttle-platform/dashboards/client/dist
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Anything else (webhooks, etc.) → the per-client Hermes gateway.
 	reverse_proxy 127.0.0.1:${PORT}
-	respond /healthz "ok" 200
+
 	request_body {
 		max_size 1MB
 	}
+
 	log {
 		output file /var/log/full-throttle/${SLUG}-access.log {
 			roll_size 10mb
@@ -86,6 +107,15 @@ ${HOST} {
 }
 EOF
 )
+
+# Read this client's FT_DASHBOARD_TOKEN so we can print the dashboard URL at
+# the end. Falls back to empty (printing the URL without the fragment) if the
+# profile was onboarded before Task 2.10 landed — in that case the SPA shows
+# the NotAuthenticated state until a fresh onboard or manual token injection.
+DASHBOARD_TOKEN=""
+if [ -f "${PROFILE_DIR}/.env" ]; then
+  DASHBOARD_TOKEN=$(grep -E '^FT_DASHBOARD_TOKEN=' "${PROFILE_DIR}/.env" 2>/dev/null | head -1 | cut -d= -f2- || true)
+fi
 
 if [ "$DRY" -eq 1 ]; then
   log "DRY-RUN — would write fragment:"
@@ -117,4 +147,15 @@ else
   log "live check failed (may still be provisioning the TLS cert); inspect with:"
   log "    journalctl -u hermes-gateway@${SLUG} -f"
   log "    journalctl -u caddy -f"
+fi
+
+# Owner dashboard URL. Token is delivered as a URL fragment (#token=…) so it
+# never reaches access logs — the SPA reads it once, stows it in
+# sessionStorage, and strips the hash before the user sees the URL bar.
+if [ -n "$DASHBOARD_TOKEN" ]; then
+  log "owner dashboard:"
+  printf '\033[1;32m    https://%s/dash/#token=%s\033[0m\n' "$HOST" "$DASHBOARD_TOKEN"
+else
+  log "owner dashboard: https://${HOST}/dash/"
+  log "  (no FT_DASHBOARD_TOKEN in ${PROFILE_DIR}/.env — re-run onboard_client.py to generate one)"
 fi

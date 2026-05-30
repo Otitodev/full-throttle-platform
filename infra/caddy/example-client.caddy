@@ -1,19 +1,36 @@
-# Example per-client fragment. promote_client.sh writes one of these per slug
-# at /etc/full-throttle/caddy.d/<slug>.caddy and reloads Caddy.
+# Example per-client Caddy fragment. `promote_client.sh` materializes one of
+# these per slug at /etc/full-throttle/caddy.d/<slug>.caddy.
 #
-# DNS: a wildcard A record `*.hooks.<your-domain>` → droplet IP must already exist.
-# Caddy will auto-provision a TLS cert for the subdomain on first request.
+# DNS: a wildcard A record `*.hooks.<your-domain>` → droplet IP must exist.
+# Caddy auto-provisions a TLS cert for the subdomain on first request.
 
 mrfence.hooks.example.com {
-	# Each client's Hermes gateway listens on its own deterministic port
-	# (8645 + sha256(slug) % 300), recorded in <profile>/config.yaml under
-	# platforms.webhook.extra.port.
+	# Cheap liveness probe answered directly by Caddy.
+	handle /healthz {
+		respond "ok" 200
+	}
+
+	# Owner-dashboard API → the central aggregator (127.0.0.1:9201). Aggregator
+	# enforces per-profile Bearer (FT_DASHBOARD_TOKEN in <profile>/.env).
+	handle /api/client/* {
+		reverse_proxy 127.0.0.1:9201
+	}
+
+	# Owner-dashboard SPA at /dash/*. The Vite build's `base: "/dash/"` makes
+	# its asset URLs start with /dash/, so handle_path strips that prefix and
+	# file_server resolves against dist/.
+	handle_path /dash/* {
+		root * /srv/full-throttle-platform/dashboards/client/dist
+		try_files {path} /index.html
+		file_server
+	}
+
+	# Anything else — webhooks, gateway routes — goes to this client's Hermes
+	# gateway. Each gateway listens on its own deterministic port
+	# (registry-allocated; recorded in <profile>/config.yaml at
+	# platforms.webhook.extra.port).
 	reverse_proxy 127.0.0.1:8723
 
-	# Useful for operator probes; everything else is the gateway's job.
-	respond /healthz "ok" 200
-
-	# Keep request bodies reasonable — webhook leads are tiny.
 	request_body {
 		max_size 1MB
 	}

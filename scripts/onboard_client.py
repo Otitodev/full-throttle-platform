@@ -21,6 +21,7 @@ import hashlib
 import json
 import os
 import re
+import secrets as py_secrets
 import shutil
 import subprocess
 from pathlib import Path
@@ -270,6 +271,27 @@ def provision_greenfield_site(intake: dict) -> dict:
             "business_json": str(data_dir / "business.json")}
 
 
+def _read_existing_dashboard_token(env_path: Path) -> str:
+    """Pull FT_DASHBOARD_TOKEN from an existing profile .env, or '' if absent.
+
+    We never rotate the token silently — re-onboarding (--force) keeps the
+    existing value so any URLs the operator already handed out keep working.
+    """
+    if not env_path.is_file():
+        return ""
+    try:
+        for raw in env_path.read_text(encoding="utf-8").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            k, _, v = line.partition("=")
+            if k.strip() == "FT_DASHBOARD_TOKEN":
+                return v.strip()
+    except OSError:
+        pass
+    return ""
+
+
 def render_env_file(env: dict) -> str:
     return "".join(f"{k}={v}\n" for k, v in env.items())
 
@@ -447,6 +469,15 @@ def main() -> None:
 
     # 3. .env (secrets), restricted perms
     env_path = profile / ".env"
+    # FT_DASHBOARD_TOKEN: per-client Bearer for the owner dashboard. Generated
+    # at first onboarding and preserved on re-onboard so existing operator URLs
+    # keep working — never rotated silently. To rotate, delete this line from
+    # the .env (or wipe the file) and re-run.
+    existing_token = _read_existing_dashboard_token(env_path)
+    if existing_token:
+        env["FT_DASHBOARD_TOKEN"] = existing_token
+    else:
+        env["FT_DASHBOARD_TOKEN"] = py_secrets.token_urlsafe(32)
     env_path.write_text(render_env_file(env), encoding="utf-8")
     try:
         env_path.chmod(0o600)
