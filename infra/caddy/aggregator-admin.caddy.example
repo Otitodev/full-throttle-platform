@@ -9,16 +9,18 @@
 # DNS: an A record {{ADMIN_DOMAIN}} → droplet IP must already exist.
 
 {{ADMIN_DOMAIN}} {
-	# /healthz answered directly by Caddy so liveness probes don't hit Python.
-	respond /healthz "ok" 200
+	# /healthz answered directly by Caddy so liveness probes don't hit Python
+	# and don't fall through to the SPA's try_files fallback.
+	handle /healthz {
+		respond "ok" 200
+	}
 
 	# All admin endpoints are basicauth-gated. The aggregator binds only
 	# 127.0.0.1, so this is the only path that can reach it.
-	basicauth /api/admin/* {
-		admin {{ADMIN_PASSWORD_HASH}}
-	}
-
 	handle /api/admin/* {
+		basic_auth {
+			admin {{ADMIN_PASSWORD_HASH}}
+		}
 		reverse_proxy 127.0.0.1:9201
 	}
 
