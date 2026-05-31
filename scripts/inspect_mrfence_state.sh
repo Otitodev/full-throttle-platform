@@ -17,10 +17,14 @@ systemctl show "hermes-gateway@$SLUG" -p MainPID,ActiveState,SubState --value | 
 PID=$(systemctl show "hermes-gateway@$SLUG" -p MainPID --value)
 echo "PID=$PID"
 
-echo "=== journal (last 80 lines for PID $PID)"
-if [ "$PID" != "0" ]; then
-  journalctl _PID="$PID" --no-pager -n 80 | tail -70 || true
-fi
+echo "=== journal (last 200 lines for unit hermes-gateway@$SLUG)"
+journalctl -u "hermes-gateway@$SLUG" --no-pager -n 200 | tail -150 || true
+
+echo "=== child processes"
+pgrep -af hermes | head -20 || true
+
+echo "=== listening sockets for hermes user"
+ss -tlnp 2>/dev/null | grep -E ":(8758|8644|8645)\b" || true
 
 echo "=== audit"
 if sudo -u hermes test -f "$PROF/governance/audit.jsonl"; then
