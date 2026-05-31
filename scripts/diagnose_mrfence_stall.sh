@@ -37,9 +37,10 @@ pgrep -af "pip|uv|pip install" | grep -v "scripts/diagnose" || echo "none"
 echo "=== open network connections for PID $PID"
 ss -tnp 2>/dev/null | grep "pid=$PID" | head -20 || true
 
-echo "=== importability of anthropic + openai in gateway python"
-sudo -u hermes "$PYTHON_EXE" - <<'PY'
-import importlib, sys, time
+echo "=== importability of anthropic + openai in gateway venv python (not bare uv exe)"
+VENV_PY="/home/hermes/.hermes/hermes-agent/venv/bin/python3"
+sudo -u hermes "$VENV_PY" - <<'PY'
+import importlib, time
 for mod in ("anthropic", "openai", "httpx"):
     t0 = time.time()
     try:
@@ -49,6 +50,17 @@ for mod in ("anthropic", "openai", "httpx"):
     except Exception as e:
         print(f"{mod}: FAIL {type(e).__name__}: {e}")
 PY
+
+echo "=== reverse-DNS the open TCP6 peer"
+PEER=$(ss -tnp 2>/dev/null | awk -v p="pid=$PID" '$0 ~ p {print $5}' | head -1)
+echo "peer raw: $PEER"
+PEER_IP=$(echo "$PEER" | sed -E 's/\]?:[0-9]+$//' | tr -d '[]')
+echo "peer ip: $PEER_IP"
+if [ -n "$PEER_IP" ]; then
+  getent hosts "$PEER_IP" 2>/dev/null || true
+  # try a reverse lookup via dig if installed
+  command -v dig >/dev/null 2>&1 && dig +short -x "$PEER_IP" || true
+fi
 
 echo "=== py-spy stack dump (if available)"
 if command -v py-spy >/dev/null 2>&1; then
