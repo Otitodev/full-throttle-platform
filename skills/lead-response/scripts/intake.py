@@ -26,9 +26,8 @@ from _common import audit, fail, state_dir
 from adapters.base import Lead, lead_fingerprint
 
 FIRST_TOUCH = (
-    "Hi {name}, thanks for reaching out to {business}! This is our team — we got your "
-    "request{about} and want to help. What's the best day/time for a free on-site estimate? "
-    "Reply here or call us anytime."
+    "Hi {name}, thanks for contacting {business}! Got your request{about}. "
+    "When works for a free on-site estimate? Reply or call us."
 )
 
 
@@ -83,13 +82,23 @@ def main() -> None:
     duplicate = lead.id in seen_ids
 
     first_name = (lead.name or "there").split()[0]
-    about = f" about {lead.message[:60]}" if lead.message else ""
+    about = f" about {lead.message[:20]}" if lead.message else ""
     template = args.template or FIRST_TOUCH
     message = ""
     try:
         message = template.format(name=first_name, business=args.business, about=about)
     except KeyError as exc:
         fail(f"template references unknown field: {exc}")
+    # SMS segment guard: keep first-touch deliverable on Twilio Trial (which caps
+    # multi-segment messages). 1 GSM-7 segment = 160 chars; any non-GSM-7 char
+    # (em dash, smart quotes, emoji, accented letters) forces UCS-2 = 70 chars
+    # per segment. Normalise the common offenders, then truncate to 160.
+    _gsm_subs = {"—": "-", "–": "-", "‘": "'", "’": "'",
+                 "“": '"', "”": '"', "…": "..."}
+    for bad, good in _gsm_subs.items():
+        message = message.replace(bad, good)
+    if len(message) > 160:
+        message = message[:157].rstrip() + "..."
 
     if not duplicate:
         with log_path.open("a", encoding="utf-8") as fh:
