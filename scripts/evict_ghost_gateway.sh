@@ -9,16 +9,16 @@ echo "=== all hermes processes"
 pgrep -af hermes 2>&1 | grep -v evict_ghost || true
 
 echo
-echo "=== ghost candidates (exe path contains /opt/hermes-agent or 'deleted')"
+echo "=== ghost candidates (cmdline contains /opt/hermes-agent, OR /proc/exe is missing/deleted)"
 GHOSTS=()
 for pid in $(pgrep -f hermes 2>/dev/null); do
-  exe=$(readlink /proc/$pid/exe 2>/dev/null || echo "")
-  case "$exe" in
-    *deleted*|*opt/hermes-agent*)
-      cmd=$(tr '\0' ' ' < /proc/$pid/cmdline 2>/dev/null | head -c 160)
+  cmd=$(tr '\0' ' ' < /proc/$pid/cmdline 2>/dev/null | head -c 200)
+  exe=$(readlink /proc/$pid/exe 2>/dev/null || echo "<readlink-failed>")
+  case "$cmd $exe" in
+    *opt/hermes-agent*|*"(deleted)"*|*"<readlink-failed>"*)
       echo "  PID $pid"
-      echo "    exe: $exe"
       echo "    cmd: $cmd"
+      echo "    exe: $exe"
       GHOSTS+=("$pid")
       ;;
   esac
