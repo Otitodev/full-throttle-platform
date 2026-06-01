@@ -329,7 +329,17 @@ Packaged in `infra/` for a single-droplet, subdomain-per-client setup (full runb
 - Flow: `install_server.sh` (one-time bootstrap) → `scripts/onboard_client.py` (per client) →
   `infra/promote_client.sh <slug>` (drops Caddy fragment + enables the systemd unit) → live at
   `https://<slug>.hooks.<domain>/webhooks/lead`.
+- **SMS reply path**: each client's Caddy fragment adds `handle /webhooks/twilio*` →
+  `127.0.0.1:8080` (Hermes' SMS adapter). The client's Twilio number's `sms_url` is repointed
+  to the public webhook, so customer replies to the first-touch route back into the same agent
+  session (`scripts/wire_sms_reply_path.sh`).
+- **Hardening drop-in** at `/etc/systemd/system/hermes-gateway@.service.d/local-state.conf`
+  adds `/home/hermes/.local/state` to `ReadWritePaths` so platforms using Hermes' XDG-anchored
+  cross-profile locks (Telegram, future ones) don't trip `EROFS` against the systemd sandbox.
 - Scale-out beyond ~30 clients = migrate to kanban dispatcher + worker fleet (§10), no rewrite.
+
+**Status (2026-06-01):** end-to-end pipeline proven on the pilot droplet `138.197.7.87`. See
+[`STATUS.md`](STATUS.md) for the current state of every moving part.
 
 ## 15. Dashboards
 
