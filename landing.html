@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FullThrottle — AI-Powered Lead Response for Home Service Contractors</title>
+<meta name="description" content="Respond to leads in 60 seconds, automatically. Built for fencing, roofing, HVAC, and home service contractors who lose jobs to faster competitors.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #080808;
+    --near-black: #0d0d0d;
+    --surface: #131313;
+    --surface-hover: #1a1a1a;
+    --card: #181818;
+    --border: rgba(255,255,255,0.07);
+    --border-strong: rgba(255,255,255,0.12);
+    --white: #ffffff;
+    --off-white: #f0f0f0;
+    --muted: #8a8a8a;
+    --muted-light: #a0a0a0;
+    --throttle: #ff4800;
+    --throttle-hover: #ff5c1a;
+    --throttle-glow: rgba(255,72,0,0.30);
+    --throttle-dim: rgba(255,72,0,0.10);
+    --throttle-bg: rgba(255,72,0,0.06);
+    --green: #22c55e;
+    --green-bg: rgba(34,197,94,0.08);
+    --radius-sm: 3px;
+    --radius: 6px;
+    --radius-lg: 10px;
+    --font: 'DM Sans', system-ui, -apple-system, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; scroll-padding-top: 80px; }
+  body {
+    font-family: var(--font);
+    background: var(--black);
+    color: var(--off-white);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    font-size: 16px;
+  }
+
+  /* ── Navigation ── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 16px 40px;
+    background: transparent;
+    transition: background 0.3s, border-color 0.3s;
+    border-bottom: 1px solid transparent;
+  }
+  nav.scrolled {
+    background: rgba(8,8,8,0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom-color: var(--border);
+  }
+  .nav-brand {
+    font-family: var(--font);
+    font-size: 20px; font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--white);
+    text-decoration: none;
+  }
+  .nav-brand span { color: var(--throttle); }
+  .nav-links {
+    display: flex; align-items: center; gap: 28px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-size: 13px; font-weight: 600;
+    color: var(--muted-light);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover { color: var(--white); }
+  .nav-cta {
+    font-family: var(--font-mono);
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 0.3px;
+    color: var(--white);
+    background: var(--throttle);
+    padding: 9px 18px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .nav-cta:hover { background: var(--throttle-hover); box-shadow: 0 0 32px var(--throttle-glow); }
+
+  /* ── Sections ── */
+  .container { max-width: 1100px; margin: 0 auto; padding: 0 40px; }
+  section { padding: 100px 0; }
+
+  /* ── Hero ── */
+  .hero {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    padding: 140px 0 100px;
+    position: relative;
+    overflow: hidden;
+    text-align: center;
+    background: radial-gradient(ellipse 80% 50% at 50% 30%, rgba(255,72,0,0.07) 0%, transparent 60%),
+                linear-gradient(180deg, var(--near-black) 0%, var(--black) 100%);
+  }
+  .hero-content {
+    position: relative; z-index: 1;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+  .hero-canvas {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    z-index: 0;
+    pointer-events: none;
+  }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 500;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--throttle);
+    border: 1px solid var(--throttle-dim);
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 32px;
+  }
+  .hero-badge::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--throttle);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--throttle-glow);
+  }
+  .hero h1 {
+    font-family: var(--font);
+    font-size: clamp(42px, 7vw, 76px);
+    font-weight: 900;
+    line-height: 1.02;
+    letter-spacing: -2px;
+    color: var(--white);
+    margin-bottom: 24px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    color: var(--throttle);
+    text-shadow: 0 0 60px var(--throttle-glow);
+    animation: flickerGlow 4s ease-in-out infinite;
+  }
+  .hero-sub {
+    font-size: 18px; color: var(--muted);
+    max-width: 560px; line-height: 1.65;
+    margin: 0 auto 36px;
+  }
+  .hero-stat-big {
+    display: flex; align-items: baseline; justify-content: center; gap: 12px;
+    margin-bottom: 36px;
+  }
+  .hero-stat-number {
+    font-family: var(--font-mono);
+    font-size: clamp(56px, 8vw, 88px);
+    font-weight: 700;
+    color: var(--throttle);
+    line-height: 1;
+    letter-spacing: -2px;
+    text-shadow: 0 0 60px var(--throttle-glow);
+    animation: pulseNumber 3s ease-in-out infinite;
+  }
+  .hero-stat-suffix {
+    font-family: var(--font-mono);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--muted-light);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .hero-stat-label {
+    font-size: 15px; font-weight: 600;
+    color: var(--white);
+    margin-top: 4px;
+  }
+  .hero-stat-sub {
+    font-size: 13px; color: var(--muted);
+    margin-top: 4px;
+  }
+  .hero-actions {
+    display: flex; gap: 14px; flex-wrap: wrap;
+    justify-content: center;
+  }
+  .btn {
+    font-family: var(--font-mono);
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 0.3px;
+    padding: 14px 28px;
+    border-radius: var(--radius-sm);
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: all 0.2s;
+  }
+  .btn-primary {
+    color: var(--white);
+    background: var(--throttle);
+  }
+  .btn-primary:hover {
+    background: var(--throttle-hover);
+    box-shadow: 0 0 40px var(--throttle-glow);
+    transform: translateY(-1px);
+  }
+  .btn-outline {
+    color: var(--off-white);
+    background: transparent;
+    border: 1px solid var(--border-strong);
+  }
+  .btn-outline:hover {
+    border-color: rgba(255,255,255,0.30);
+    background: rgba(255,255,255,0.03);
+  }
+
+  /* Hero effects */
+  @keyframes flickerGlow {
+    0%, 100% { text-shadow: 0 0 40px var(--throttle-glow), 0 0 80px rgba(255,72,0,0.15); }
+    50% { text-shadow: 0 0 70px var(--throttle-glow), 0 0 140px rgba(255,72,0,0.25), 0 0 200px rgba(255,72,0,0.08); }
+  }
+  @keyframes pulseNumber {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.03); opacity: 0.9; }
+  }
+
+  /* ── Problem Stats Strip ── */
+  .stats-strip {
+    padding: 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    background: var(--near-black);
+  }
+  .stats-strip .container {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: var(--border);
+    padding: 0 40px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+  .stat-cell {
+    background: var(--near-black);
+    padding: 40px 32px;
+    text-align: center;
+  }
+  .stat-cell-value {
+    font-family: var(--font-mono);
+    font-size: clamp(32px, 4vw, 44px);
+    font-weight: 700;
+    color: var(--throttle);
+    line-height: 1.1;
+    letter-spacing: -1px;
+    text-shadow: 0 0 24px var(--throttle-glow);
+  }
+  .stat-cell-label {
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 0.5px;
+    color: var(--muted-light);
+    margin-top: 8px;
+    text-transform: uppercase;
+  }
+  .stat-cell-sub {
+    font-size: 12px; color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ── Section Headers ── */
+  .section-label {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--throttle);
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: var(--font);
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 900;
+    letter-spacing: -1px;
+    line-height: 1.1;
+    color: var(--white);
+  }
+  .section-sub {
+    font-size: 16px; color: var(--muted);
+    max-width: 500px; margin-top: 14px;
+    line-height: 1.6;
+  }
+
+  /* ── How It Works ── */
+  .how { background: var(--near-black); }
+  .how-header { margin-bottom: 56px; }
+  .how-flow {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .how-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 40px 32px;
+    position: relative;
+    transition: border-color 0.25s;
+  }
+  .how-card:hover { border-color: var(--border-strong); }
+  .how-card-step {
+    font-family: var(--font-mono);
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--throttle);
+    margin-bottom: 16px;
+  }
+  .how-card-icon {
+    font-size: 32px; margin-bottom: 16px;
+    display: block; width: 52px; height: 52px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--throttle-bg);
+    border-radius: var(--radius);
+    color: var(--throttle);
+  }
+  .how-card h3 {
+    font-size: 20px; font-weight: 800;
+    letter-spacing: -0.3px;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+  .how-card p {
+    font-size: 14px; color: var(--muted);
+    line-height: 1.7;
+  }
+  .how-arrow {
+    display: flex; align-items: center; justify-content: center;
+    color: var(--throttle);
+    font-size: 20px;
+    padding: 0 8px;
+  }
+
+  /* ── Capabilities ── */
+  .capabilities { background: var(--black); }
+  .cap-header { margin-bottom: 56px; }
+  .cap-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+  }
+  .cap-card {
+    background: var(--surface);
+    padding: 44px 36px;
+    transition: background 0.25s;
+  }
+  .cap-card:hover { background: var(--surface-hover); }
+  .cap-card-icon {
+    font-size: 26px; margin-bottom: 16px;
+    display: block; width: 44px; height: 44px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--throttle-bg);
+    border-radius: var(--radius-sm);
+    color: var(--throttle);
+  }
+  .cap-card h3 {
+    font-size: 18px; font-weight: 800;
+    letter-spacing: -0.3px;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+  .cap-card p {
+    font-size: 13.5px; color: var(--muted);
+    line-height: 1.7;
+  }
+  .cap-card-outcome {
+    display: inline-flex; align-items: center; gap: 5px;
+    margin-top: 14px;
+    font-size: 12px; font-weight: 600;
+    color: var(--green);
+    background: var(--green-bg);
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+  }
+
+  /* ── Integrations ── */
+  .integrations { background: var(--near-black); }
+  .int-header { text-align: center; margin-bottom: 48px; }
+  .int-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    max-width: 800px; margin: 0 auto;
+  }
+  .int-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px 20px 24px;
+    text-align: center;
+    transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
+    cursor: default;
+  }
+  .int-card:hover {
+    border-color: var(--border-strong);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  }
+  .int-card-logo {
+    width: 44px; height: 44px;
+    margin: 0 auto 14px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .int-card-logo svg { width: 100%; height: 100%; }
+  .int-card-name {
+    font-size: 15px; font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.2px;
+  }
+  .int-card-role {
+    font-size: 12px; color: var(--muted);
+    margin-top: 4px;
+  }
+
+  /* ── Pricing ── */
+  .pricing { background: var(--black); }
+  .pricing-header { text-align: center; margin-bottom: 56px; }
+  .pricing-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    max-width: 800px; margin: 0 auto;
+  }
+  .pricing-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 40px 36px;
+    position: relative;
+    transition: border-color 0.25s;
+  }
+  .pricing-card.featured {
+    border-color: var(--throttle);
+    background: linear-gradient(160deg, var(--surface) 0%, var(--throttle-bg) 100%);
+  }
+  .pricing-card.featured::before {
+    content: 'MOST VALUE';
+    position: absolute; top: -11px; left: 50%; transform: translateX(-50%);
+    font-family: var(--font-mono);
+    font-size: 10px; font-weight: 700;
+    letter-spacing: 1px;
+    color: var(--white);
+    background: var(--throttle);
+    padding: 4px 14px;
+    border-radius: 100px;
+  }
+  .pricing-card:hover { border-color: var(--border-strong); }
+  .pricing-card.featured:hover { border-color: var(--throttle); }
+  .pricing-name {
+    font-size: 20px; font-weight: 800;
+    letter-spacing: -0.3px;
+    color: var(--white);
+    margin-bottom: 4px;
+  }
+  .pricing-desc {
+    font-size: 13px; color: var(--muted);
+    margin-bottom: 20px;
+  }
+  .pricing-amount {
+    font-family: var(--font-mono);
+    font-size: 40px; font-weight: 700;
+    color: var(--white);
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .pricing-period {
+    font-size: 13px; color: var(--muted);
+    margin-bottom: 24px;
+  }
+  .pricing-features {
+    list-style: none;
+    margin-bottom: 28px;
+  }
+  .pricing-features li {
+    font-size: 13px; color: var(--muted-light);
+    padding: 6px 0;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .pricing-features li::before {
+    content: '✓';
+    color: var(--green);
+    font-weight: 700;
+    font-size: 12px;
+    flex-shrink: 0;
+  }
+  .pricing-features li.muted { color: var(--muted); opacity: 0.5; }
+  .pricing-features li.muted::before { color: var(--muted); }
+  .pricing-card .btn { width: 100%; justify-content: center; }
+
+  /* ── Testimonial Placeholder ── */
+  .social-proof { background: var(--near-black); }
+  .proof-quote {
+    max-width: 640px; margin: 0 auto;
+    text-align: center;
+    padding: 60px 0;
+  }
+  .proof-text {
+    font-size: 20px; font-weight: 500;
+    color: var(--off-white);
+    line-height: 1.6;
+    font-style: italic;
+  }
+  .proof-attribution {
+    font-size: 13px; color: var(--muted);
+    margin-top: 16px;
+  }
+
+  /* ── FAQ ── */
+  .faq { background: var(--black); }
+  .faq-header { margin-bottom: 48px; }
+  .faq-list { max-width: 700px; }
+  .faq-item {
+    border-bottom: 1px solid var(--border);
+    padding: 24px 0;
+  }
+  .faq-q {
+    font-size: 16px; font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.2px;
+    cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center;
+    width: 100%;
+    background: none; border: none;
+    text-align: left;
+    font-family: inherit;
+    padding: 0;
+  }
+  .faq-q:hover { color: var(--throttle); }
+  .faq-a {
+    font-size: 14px; color: var(--muted);
+    line-height: 1.7;
+    margin-top: 12px;
+    display: none;
+  }
+  .faq-item.open .faq-a { display: block; }
+  .faq-arrow {
+    font-size: 12px; transition: transform 0.2s;
+    color: var(--muted);
+    flex-shrink: 0;
+    margin-left: 16px;
+  }
+  .faq-item.open .faq-arrow { transform: rotate(45deg); color: var(--throttle); }
+
+  /* ── Contact Form ── */
+  .contact { background: var(--black); }
+  .contact-header { text-align: center; margin-bottom: 48px; }
+  .contact-form {
+    max-width: 560px; margin: 0 auto;
+  }
+  .form-group { margin-bottom: 20px; }
+  .form-group label {
+    display: block;
+    font-size: 12px; font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted-light);
+    margin-bottom: 8px;
+  }
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    width: 100%;
+    padding: 12px 16px;
+    font-family: var(--font);
+    font-size: 15px;
+    color: var(--white);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    outline: none;
+  }
+  .form-group input:focus,
+  .form-group select:focus,
+  .form-group textarea:focus {
+    border-color: var(--throttle);
+    box-shadow: 0 0 0 3px var(--throttle-dim);
+  }
+  .form-group textarea {
+    min-height: 100px;
+    resize: vertical;
+  }
+  .form-group select {
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23888' fill='none' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 16px center;
+    padding-right: 40px;
+    cursor: pointer;
+  }
+  .form-group select option {
+    background: var(--surface);
+    color: var(--white);
+  }
+  .form-submit {
+    width: 100%;
+    padding: 14px;
+    font-family: var(--font-mono);
+    font-size: 13px; font-weight: 600;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    color: var(--white);
+    background: var(--throttle);
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s;
+  }
+  .form-submit:hover {
+    background: var(--throttle-hover);
+    box-shadow: 0 0 32px var(--throttle-glow);
+  }
+  .form-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+  .form-success {
+    display: none;
+    text-align: center;
+    padding: 40px 0;
+  }
+  .form-success.visible { display: block; }
+  .form-success-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: var(--green);
+  }
+  .form-success h3 {
+    font-size: 22px; font-weight: 800;
+    color: var(--white);
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+  .form-success p {
+    font-size: 15px; color: var(--muted);
+  }
+  .form-error {
+    font-size: 12px; color: var(--throttle);
+    margin-top: 6px;
+    display: none;
+  }
+  .form-error.visible { display: block; }
+
+  /* ── CTA ── */
+  .cta-section {
+    background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(255,72,0,0.08) 0%, transparent 60%),
+                var(--near-black);
+    text-align: center;
+    padding: 120px 0;
+  }
+  .cta-title {
+    font-family: var(--font);
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 900;
+    letter-spacing: -1.5px;
+    line-height: 1.1;
+    color: var(--white);
+    max-width: 600px; margin: 0 auto 16px;
+  }
+  .cta-title em {
+    font-style: normal;
+    color: var(--throttle);
+    text-shadow: 0 0 40px var(--throttle-glow);
+  }
+  .cta-sub {
+    font-size: 16px; color: var(--muted);
+    max-width: 440px; margin: 0 auto 36px;
+  }
+
+  /* ── Footer ── */
+  footer {
+    padding: 40px 0;
+    border-top: 1px solid var(--border);
+    background: var(--black);
+  }
+  .footer-inner {
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 16px;
+  }
+  .footer-brand {
+    font-size: 16px; font-weight: 800;
+    color: var(--white);
+    letter-spacing: -0.3px;
+  }
+  .footer-brand span { color: var(--throttle); }
+  .footer-links {
+    display: flex; gap: 24px; flex-wrap: wrap;
+    list-style: none;
+  }
+  .footer-links a {
+    font-size: 13px; color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+  .footer-links a:hover { color: var(--white); }
+  .footer-copy {
+    font-size: 12px; color: rgba(255,255,255,0.20);
+    width: 100%; text-align: center;
+    margin-top: 8px;
+  }
+
+  /* ── Responsive ── */
+  @media (max-width: 900px) {
+    .hero-content { padding: 0; }
+    .hero-stat-big { flex-direction: column; align-items: center; }
+    .hero-stat-number { font-size: clamp(48px, 12vw, 72px); }
+    .cap-grid { grid-template-columns: 1fr; }
+    .how-flow { grid-template-columns: 1fr; }
+    .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
+    .int-grid { grid-template-columns: repeat(2, 1fr); }
+    .stats-strip .container { grid-template-columns: 1fr; }
+    nav { padding: 14px 20px; }
+    .nav-links { display: none; }
+    .container { padding: 0 20px; }
+    section { padding: 64px 0; }
+    .hero { padding: 120px 0 64px; min-height: auto; }
+  }
+  @media (min-width: 901px) {
+    .how-flow { grid-template-columns: 1fr 40px 1fr 40px 1fr; }
+    .how-arrow { display: flex; }
+    .how-card { padding: 36px 28px; }
+  }
+  @media (max-width: 901px) {
+    .how-arrow { display: none; }
+    .how-flow { grid-template-columns: 1fr; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
+  }
+
+  /* ── Animations ── */
+  @keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 0 40px var(--throttle-glow); }
+    50% { box-shadow: 0 0 80px var(--throttle-glow), 0 0 120px rgba(255,72,0,0.08); }
+  }
+  @keyframes countUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes streakRight {
+    from { transform: translateX(-100%); opacity: 0; }
+    20% { opacity: 0.6; }
+    80% { opacity: 0.6; }
+    to { transform: translateX(100vw); opacity: 0; }
+  }
+
+  .reveal { opacity: 0; }
+  .reveal.revealed { animation: fadeInUp 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  .reveal-fast.revealed { animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+  .reveal-fade.revealed { animation: fadeIn 0.6s ease forwards; }
+
+  .hero-stat-big.revealed .hero-stat-number { animation: countUp 0.6s 0.1s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .hero-stat-big.revealed .hero-stat-label { animation: countUp 0.5s 0.25s cubic-bezier(0.16, 1, 0.3, 1) both; }
+  .hero-stat-big.revealed .hero-stat-sub { animation: countUp 0.5s 0.35s cubic-bezier(0.16, 1, 0.3, 1) both; }
+
+  .cta-section .btn-primary {
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
+  .cta-section .btn-primary:hover {
+    animation: none;
+  }
+
+  /* Speed-lines decoration (hero) */
+  .speed-lines {
+    position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+    overflow: hidden; pointer-events: none; z-index: 0;
+  }
+  .speed-line {
+    position: absolute; left: -100%;
+    width: 30%; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,72,0,0.12), transparent);
+    animation: streakRight 6s linear infinite;
+  }
+  .speed-line:nth-child(1) { top: 18%; animation-delay: 0s; animation-duration: 5.5s; }
+  .speed-line:nth-child(2) { top: 35%; animation-delay: 1.5s; animation-duration: 6.2s; width: 20%; }
+  .speed-line:nth-child(3) { top: 55%; animation-delay: 3s; animation-duration: 5.8s; width: 35%; }
+  .speed-line:nth-child(4) { top: 70%; animation-delay: 4.2s; animation-duration: 5.3s; width: 22%; }
+</style>
+</head>
+<body>
+
+<!-- Navigation -->
+<nav id="nav">
+  <a href="#" class="nav-brand">Full<span>Throttle</span></a>
+  <ul class="nav-links">
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#capabilities">Capabilities</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#faq">FAQ</a></li>
+    <li><a href="#cta" class="nav-cta">Book a Demo</a></li>
+  </ul>
+</nav>
+
+<!-- Hero -->
+<section class="hero" id="hero">
+  <div class="hero-canvas" id="heroBg"></div>
+  <div class="speed-lines" aria-hidden="true">
+    <div class="speed-line"></div>
+    <div class="speed-line"></div>
+    <div class="speed-line"></div>
+    <div class="speed-line"></div>
+  </div>
+  <div class="container">
+    <div class="hero-content reveal">
+      <div class="hero-badge">Built for Home Service Contractors</div>
+      <h1>Your leads, answered in <em>60 seconds</em>.</h1>
+      <p class="hero-sub">
+        78% of customers hire the first contractor who responds. FullThrottle makes sure that's you — automatically qualifying leads, booking jobs, and syncing to your CRM while you're on the tools.
+      </p>
+      <div class="hero-actions">
+        <a href="#contact" class="btn btn-primary">Get Early Access →</a>
+        <a href="#how" class="btn btn-outline">See How It Works</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Stats Strip -->
+<section class="stats-strip">
+  <div class="container reveal">
+    <div class="stat-cell">
+      <div class="stat-cell-value">78%</div>
+      <div class="stat-cell-label">Hire First Responder</div>
+      <div class="stat-cell-sub">The first contractor to reply wins the job</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-cell-value">$4K–12K</div>
+      <div class="stat-cell-label">Average Job Value</div>
+      <div class="stat-cell-sub">Every missed lead costs thousands</div>
+    </div>
+    <div class="stat-cell">
+      <div class="stat-cell-value">24/7</div>
+      <div class="stat-cell-label">Always Responding</div>
+      <div class="stat-cell-sub">Leads answered even at 2am or on weekends</div>
+    </div>
+  </div>
+</section>
+
+<!-- How It Works -->
+<section class="how" id="how">
+  <div class="container">
+    <div class="how-header reveal">
+      <div class="section-label">How It Works</div>
+      <h2 class="section-title">From lead to booked job — automatically</h2>
+      <p class="section-sub">No new website. No engineering team. Just faster response and more jobs.</p>
+    </div>
+    <div class="how-flow">
+      <div class="how-card reveal-fast">
+        <div class="how-card-step">Step 1</div>
+        <div class="how-card-icon">📥</div>
+        <h3>Lead comes in</h3>
+        <p>A customer fills out your web form, calls, or messages through Google Local Services. FullThrottle detects it instantly.</p>
+      </div>
+      <div class="how-arrow">→</div>
+      <div class="how-card reveal-fast" style="animation-delay: 0.15s;">
+        <div class="how-card-step">Step 2</div>
+        <div class="how-card-icon">⚡</div>
+        <h3>Instant response</h3>
+        <p>Within 60 seconds, the lead gets a personalized SMS or email — qualifying questions, your service area check, availability.</p>
+      </div>
+      <div class="how-arrow">→</div>
+      <div class="how-card reveal-fast" style="animation-delay: 0.15s;">
+        <div class="how-card-step">Step 3</div>
+        <div class="how-card-icon">✅</div>
+        <h3>Synced &amp; booked</h3>
+        <p>The qualified lead lands in your CRM (Jobber, Housecall Pro). You get a notification. You show up and do the work.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Capabilities -->
+<section class="capabilities" id="capabilities">
+  <div class="container">
+    <div class="cap-header reveal">
+      <div class="section-label">What You Get</div>
+      <h2 class="section-title">Everything you need to win more jobs</h2>
+      <p class="section-sub">Four capabilities that run automatically. You stay focused on the work.</p>
+    </div>
+    <div class="cap-grid">
+      <div class="cap-card reveal-fast">
+        <div class="cap-card-icon">⚡</div>
+        <h3>Lead Response</h3>
+        <p>Inbound leads from your website, Google LSA, or Facebook get an instant, personalized reply. Qualifies the lead, answers common questions, and syncs to your CRM.</p>
+        <div class="cap-card-outcome">↑ 391% conversion</div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-card-icon">⭐</div>
+        <h3>Review Automation</h3>
+        <p>After every completed job, your customer gets a review request. New reviews get AI-drafted replies for your approval. Negative reviews escalate to you immediately.</p>
+        <div class="cap-card-outcome">↑ 80% review rate</div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-card-icon">📍</div>
+        <h3>Google Business Profile</h3>
+        <p>Regular GBP posts, photo updates, Q&amp;A monitoring, and category optimization. The #1 local SEO lever — managed automatically, ranked by your actual service areas.</p>
+        <div class="cap-card-outcome">↑ map pack visibility</div>
+      </div>
+      <div class="cap-card">
+        <div class="cap-card-icon">📝</div>
+        <h3>Content Publishing</h3>
+        <p>Localized blog posts and service pages published into your existing website — WordPress, or via proxy. Uses real project photos, local pricing, and your actual service areas.</p>
+        <div class="cap-card-outcome">↑ organic traffic</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Integrations -->
+<section class="integrations">
+  <div class="container">
+    <div class="int-header reveal">
+      <div class="section-label">Integrations</div>
+      <h2 class="section-title">Works with what you already use</h2>
+      <p class="section-sub" style="margin:14px auto 0; text-align:center;">No platform migration. We plug into your existing website, CRM, and Google profile.</p>
+    </div>
+    <div class="int-grid">
+      <div class="int-card reveal-fast">
+        <div class="int-card-logo">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="24" cy="24" r="22" fill="#3858E9" stroke="#3858E9" stroke-width="1"/>
+            <circle cx="24" cy="24" r="17" fill="white"/>
+            <path d="M24 10c-3.5 0-6.5 1.8-8 4.5l2 1.2c1-2 3-3.3 5.5-3.3 3.3 0 6 2.7 6 6 0 2-.5 3.5-1.5 5l-4 4.5c-1 1.2-1.5 2.5-1.5 4v1h3v-1c0-1 .4-2 1.2-3l4-4.5c1.3-1.5 2-3.5 2-6 0-4.5-3.5-8.4-8.2-8.4z" fill="#3858E9"/>
+          </svg>
+        </div>
+        <div class="int-card-name">WordPress</div>
+        <div class="int-card-role">Content publishing</div>
+      </div>
+      <div class="int-card">
+        <div class="int-card-logo">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="4" width="40" height="40" rx="10" fill="#00A86B"/>
+            <path d="M16 32V18c0-2 1.5-3.5 3.5-3.5h9c2 0 3.5 1.5 3.5 3.5v14" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="24" cy="15" r="2.5" fill="white"/>
+            <path d="M14 26h20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="int-card-name">Jobber</div>
+        <div class="int-card-role">CRM &amp; lead sync</div>
+      </div>
+      <div class="int-card">
+        <div class="int-card-logo">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M24 6C16 6 10 13 10 22c0 10 12 20 14 20s14-10 14-20c0-9-6-16-14-16z" fill="#EA4335"/>
+            <circle cx="24" cy="20" r="7" fill="white"/>
+            <circle cx="24" cy="20" r="4" fill="#EA4335"/>
+          </svg>
+        </div>
+        <div class="int-card-name">Google GBP</div>
+        <div class="int-card-role">Profile &amp; reviews</div>
+      </div>
+      <div class="int-card">
+        <div class="int-card-logo">
+          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="4" y="4" width="40" height="40" rx="10" fill="#F22F46"/>
+            <circle cx="18" cy="24" r="3" fill="white"/>
+            <circle cx="26" cy="17" r="3" fill="white"/>
+            <circle cx="32" cy="28" r="3" fill="white"/>
+          </svg>
+        </div>
+        <div class="int-card-name">Twilio</div>
+        <div class="int-card-role">SMS &amp; messaging</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section class="pricing" id="pricing">
+  <div class="container">
+    <div class="pricing-header reveal">
+      <div class="section-label">Pricing</div>
+      <h2 class="section-title">One price. One system. More jobs.</h2>
+      <p class="section-sub" style="margin:14px auto 0; text-align:center;">14-day free trial on both plans. No setup fee. Cancel anytime.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="pricing-card reveal-fast">
+        <div class="pricing-name">Response</div>
+        <div class="pricing-desc">Speed-to-lead + CRM sync</div>
+        <div class="pricing-amount">$297</div>
+        <div class="pricing-period">/ month</div>
+        <ul class="pricing-features">
+          <li>Instant lead response (SMS + email)</li>
+          <li>Lead qualification &amp; booking</li>
+          <li>CRM sync (Jobber)</li>
+          <li>Weekly lead report</li>
+          <li>Owner notifications</li>
+          <li class="muted">Review automation</li>
+          <li class="muted">Google Business Profile</li>
+          <li class="muted">Content publishing</li>
+        </ul>
+        <a href="#cta" class="btn btn-outline">Start Free Trial</a>
+      </div>
+      <div class="pricing-card featured">
+        <div class="pricing-name">Full Throttle</div>
+        <div class="pricing-desc">Complete marketing automation</div>
+        <div class="pricing-amount">$797</div>
+        <div class="pricing-period">/ month</div>
+        <ul class="pricing-features">
+          <li>Everything in Response</li>
+          <li>Review requests + AI replies</li>
+          <li>Google Business Profile management</li>
+          <li>Blog &amp; content publishing</li>
+          <li>Weekly marketing report</li>
+          <li>Dedicated onboarding call</li>
+          <li>Priority support</li>
+        </ul>
+        <a href="#cta" class="btn btn-primary">Start Free Trial</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Testimonial / Social Proof -->
+<section class="social-proof">
+  <div class="container">
+    <div class="proof-quote reveal-fade">
+      <p class="proof-text">"We're looking for our first 10 contractor partners. You get 2 months free in exchange for honest feedback and a testimonial. If it doesn't book you more jobs, you owe nothing."</p>
+      <p class="proof-attribution">— FullThrottle Team</p>
+    </div>
+  </div>
+</section>
+
+<!-- Contact Form -->
+<section class="contact" id="contact">
+  <div class="container">
+    <div class="contact-header reveal">
+      <div class="section-label">Get Early Access</div>
+      <h2 class="section-title">First 10 partners get 2 months free</h2>
+      <p class="section-sub" style="margin:14px auto 0; text-align:center;">No obligation. See how FullThrottle would work for your business.</p>
+    </div>
+
+    <div class="contact-form reveal-fast" id="contactForm">
+      <div class="form-group">
+        <label for="name">Full Name</label>
+        <input type="text" id="name" name="name" placeholder="John Smith" required>
+      </div>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" placeholder="john@example.com" required>
+      </div>
+      <div class="form-group">
+        <label for="phone">Phone</label>
+        <input type="tel" id="phone" name="phone" placeholder="(555) 123-4567">
+      </div>
+      <div class="form-group">
+        <label for="business">Business Type</label>
+        <select id="business" name="business" required>
+          <option value="" disabled selected>Select your trade...</option>
+          <option value="fencing">Fencing</option>
+          <option value="roofing">Roofing</option>
+          <option value="hvac">HVAC</option>
+          <option value="landscaping">Landscaping</option>
+          <option value="plumbing">Plumbing</option>
+          <option value="electrical">Electrical</option>
+          <option value="concrete">Concrete</option>
+          <option value="painting">Painting</option>
+          <option value="general">General Contracting</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="message">Tell us about your business (optional)</label>
+        <textarea id="message" name="message" placeholder="E.g. 'We do residential fencing in Phoenix, 5-person crew, get most leads through our WordPress site and Google...'"></textarea>
+      </div>
+      <div class="form-error" id="formError"></div>
+      <button type="submit" class="form-submit" id="formSubmit">Submit →</button>
+    </div>
+
+    <div class="form-success" id="formSuccess">
+      <div class="form-success-icon">✓</div>
+      <h3>Thanks — you're on the list</h3>
+      <p>We'll reach out within 24 hours to schedule a demo and get you set up. First 10 partners get 2 months free.</p>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="faq" id="faq">
+  <div class="container">
+    <div class="faq-header reveal">
+      <div class="section-label">FAQ</div>
+      <h2 class="section-title">Common questions</h2>
+    </div>
+    <div class="faq-list reveal-fast">
+      <div class="faq-item">
+        <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          Do I need a new website?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">No. FullThrottle is augment-first — we work with your existing site. If you use WordPress, we publish directly into it. If you have something else, we use a proxy that serves content from your own domain. We never ask you to rebuild or migrate.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          What if I don't use Jobber?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">Jobber is our first CRM integration. Housecall Pro and ServiceTitan are on the roadmap. If you use something else, we can sync leads via email notification or CSV export while we build your integration. Tell us what you use and we'll prioritize it.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          Is this replacing my staff?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">No. FullThrottle handles the repetitive first-touch and follow-up that humans are slow at — especially nights, weekends, and when you're on a job site. It qualifies leads and passes the hot ones to you. Your team still closes the deals and does the work.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          How long until I see results?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">Lead response works immediately — the first lead that comes in after setup gets answered within 60 seconds. Review automation starts showing results within 2–4 weeks as jobs complete and customers respond. GBP and content publishing build over 1–3 months. Most contractors see a measurable increase in booked jobs within the first month.</div>
+      </div>
+      <div class="faq-item">
+        <button class="faq-q" onclick="this.parentElement.classList.toggle('open')">
+          What kind of contractors is this for?
+          <span class="faq-arrow">+</span>
+        </button>
+        <div class="faq-a">We're starting with fencing contractors and expanding to adjacent home services — roofing, HVAC, landscaping, plumbing, electrical, concrete, painting, and general contracting. If you run a local service business where speed-to-lead matters and jobs average $3K+, FullThrottle is built for you.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Final CTA -->
+<section class="cta-section" id="cta">
+  <div class="container reveal-fade">
+    <h2 class="cta-title">Stop losing jobs to <em>faster</em> competitors.</h2>
+    <p class="cta-sub">Get a demo. See how it would work for your business. First 10 partners get 2 months free.</p>
+    <a href="mailto:demo@fullthrottle.ai" class="btn btn-primary" style="font-size:14px; padding:16px 40px;">Book a Demo →</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">Full<span>Throttle</span></div>
+      <ul class="footer-links">
+        <li><a href="#how">How It Works</a></li>
+        <li><a href="#capabilities">Capabilities</a></li>
+        <li><a href="#pricing">Pricing</a></li>
+        <li><a href="#faq">FAQ</a></li>
+        <li><a href="mailto:demo@fullthrottle.ai">Contact</a></li>
+      </ul>
+      <div class="footer-copy">&copy; 2026 FullThrottle. Built on <a href="https://github.com/NousResearch/hermes-agent" style="color:inherit;">Hermes Agent</a>. All rights reserved.</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Sticky nav
+  const nav = document.getElementById('nav');
+  window.addEventListener('scroll', () => {
+    nav.classList.toggle('scrolled', window.scrollY > 40);
+  });
+
+  // Smooth scroll
+  document.querySelectorAll('a[href^="#"]').forEach(link => {
+    link.addEventListener('click', e => {
+      const target = document.querySelector(link.getAttribute('href'));
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  });
+
+  // Scroll-triggered reveal animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('revealed');
+        observer.unobserve(entry.target);
+      }
+    });
+  }, {
+    threshold: 0.15,
+    rootMargin: '0px 0px -40px 0px'
+  });
+
+  document.querySelectorAll('.reveal, .reveal-fast, .reveal-fade').forEach(el => {
+    observer.observe(el);
+  });
+
+  // Contact form submission
+  const form = document.getElementById('contactForm');
+  const success = document.getElementById('formSuccess');
+  const error = document.getElementById('formError');
+  const submit = document.getElementById('formSubmit');
+  const WEBHOOK_URL = 'https://hooks.138.197.7.87.nip.io/webhooks/contact';
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    submit.disabled = true;
+    submit.textContent = 'Sending...';
+    error.classList.remove('visible');
+
+    const data = {
+      name: document.getElementById('name').value.trim(),
+      email: document.getElementById('email').value.trim(),
+      phone: document.getElementById('phone').value.trim(),
+      business: document.getElementById('business').value,
+      message: document.getElementById('message').value.trim(),
+      submitted_at: new Date().toISOString()
+    };
+
+    try {
+      const res = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+
+      if (res.ok) {
+        form.style.display = 'none';
+        success.classList.add('visible');
+      } else {
+        throw new Error('Server responded with ' + res.status);
+      }
+    } catch (err) {
+      error.textContent = 'Something went wrong. Please try again or email demo@fullthrottle.ai directly.';
+      error.classList.add('visible');
+      submit.disabled = false;
+      submit.textContent = 'Submit →';
+    }
+  });
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.dots.min.js"></script>
+<script>
+VANTA.DOTS({
+  el: "#heroBg",
+  mouseControls: true,
+  touchControls: true,
+  gyroControls: false,
+  minHeight: 200.00,
+  minWidth: 200.00,
+  scale: 1.00,
+  scaleMobile: 1.00,
+  color: 0xff4800,
+  color2: 0x0d0d0d,
+  backgroundColor: 0x080808,
+  size: 2.80,
+  spacing: 28.00,
+  showLines: false
+})
+</script>
+
+</body>
+</html>
