@@ -1,0 +1,23 @@
+name: Deploy Landing Page
+
+on:
+  push:
+    branches: [feat/landing-page]
+    paths:
+      - 'landing/**'
+      - 'scripts/deploy-landing.sh'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to droplet
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd /root/full-throttle-platform
+            git pull origin feat/landing-page
+            bash scripts/deploy-landing.sh
