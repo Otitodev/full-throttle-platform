@@ -3,11 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23ff4800'/><text x='50' y='50' text-anchor='middle' dominant-baseline='central' font-family='system-ui,sans-serif' font-size='42' font-weight='900' fill='white' letter-spacing='-1'>FT</text></svg>">
+<link rel="stylesheet" href="/assets/fonts/fonts.css">
 <title>FullThrottle — AI-Powered Lead Response for Home Service Contractors</title>
 <meta name="description" content="Respond to leads in 60 seconds, automatically. Built for fencing, roofing, HVAC, and home service contractors who lose jobs to faster competitors.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
     --black: #080808;
@@ -331,6 +330,10 @@
     border-radius: var(--radius);
     color: var(--throttle);
   }
+  .how-card-icon svg {
+    width: 26px; height: 26px;
+    stroke: var(--throttle);
+  }
   .how-card h3 {
     font-size: 20px; font-weight: 800;
     letter-spacing: -0.3px;
@@ -371,6 +374,10 @@
     background: var(--throttle-bg);
     border-radius: var(--radius-sm);
     color: var(--throttle);
+  }
+  .cap-card-icon svg {
+    width: 22px; height: 22px;
+    stroke: var(--throttle);
   }
   .cap-card h3 {
     font-size: 18px; font-weight: 800;
@@ -420,7 +427,11 @@
     margin: 0 auto 14px;
     display: flex; align-items: center; justify-content: center;
   }
-  .int-card-logo svg { width: 100%; height: 100%; }
+  .int-card-logo svg,
+  .int-card-logo img { width: 100%; height: 100%; }
+  .int-card-logo img {
+    filter: invert(38%) sepia(98%) saturate(4500%) hue-rotate(0deg) brightness(102%) contrast(106%);
+  }
   .int-card-name {
     font-size: 15px; font-weight: 700;
     color: var(--white);
@@ -719,29 +730,107 @@
   }
 
   /* ── Responsive ── */
+
+  /* Tablet and below */
   @media (max-width: 900px) {
-    .hero-content { padding: 0; }
-    .hero-stat-big { flex-direction: column; align-items: center; }
-    .hero-stat-number { font-size: clamp(48px, 12vw, 72px); }
-    .cap-grid { grid-template-columns: 1fr; }
-    .how-flow { grid-template-columns: 1fr; }
-    .pricing-grid { grid-template-columns: 1fr; max-width: 400px; }
-    .int-grid { grid-template-columns: repeat(2, 1fr); }
-    .stats-strip .container { grid-template-columns: 1fr; }
-    nav { padding: 14px 20px; }
-    .nav-links { display: none; }
-    .container { padding: 0 20px; }
+    .container { padding: 0 24px; }
     section { padding: 64px 0; }
-    .hero { padding: 120px 0 64px; min-height: auto; }
+
+    /* Hero */
+    .hero { padding: 100px 0 56px; min-height: auto; }
+    .hero h1 { font-size: clamp(36px, 9vw, 56px); letter-spacing: -1px; }
+    .hero-sub { font-size: 16px; max-width: 100%; }
+    .hero-actions { flex-direction: column; align-items: stretch; }
+    .hero-actions .btn { text-align: center; justify-content: center; }
+    .speed-lines { display: none; }
+
+    /* Nav */
+    nav { padding: 12px 20px; }
+    .nav-links { display: none; }
+    .nav-links.open {
+      display: flex; flex-direction: column;
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: rgba(8,8,8,0.95);
+      backdrop-filter: blur(20px);
+      padding: 16px 20px;
+      gap: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-toggle {
+      display: flex; align-items: center; justify-content: center;
+      width: 40px; height: 40px;
+      background: none; border: none;
+      cursor: pointer;
+      color: var(--white);
+      font-size: 22px;
+    }
+
+    /* Stats */
+    .stats-strip .container { grid-template-columns: 1fr; padding: 0; }
+    .stat-cell { padding: 28px 24px; }
+    .stat-cell-value { font-size: clamp(28px, 10vw, 40px); }
+
+    /* How It Works */
+    .how-flow { grid-template-columns: 1fr; gap: 12px; }
+    .how-arrow { display: none; }
+    .how-card { padding: 28px 24px; }
+    .section-title { font-size: clamp(24px, 6vw, 36px); }
+
+    /* Capabilities */
+    .cap-grid { grid-template-columns: 1fr; }
+    .cap-card { padding: 32px 24px; }
+
+    /* Integrations */
+    .int-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .int-card { padding: 24px 16px; }
+
+    /* Pricing */
+    .pricing-grid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+    .pricing-card { padding: 32px 24px; }
+
+    /* Contact */
+    .contact-form { padding: 0; }
+
+    /* FAQ */
+    .faq-q { font-size: 15px; min-height: 44px; }
+    .faq-a { font-size: 13px; }
+
+    /* CTA */
+    .cta-section { padding: 80px 0; }
+    .cta-title { font-size: clamp(26px, 7vw, 40px); }
+
+    /* Footer */
+    .footer-inner { flex-direction: column; text-align: center; gap: 12px; }
+    .footer-links { justify-content: center; gap: 16px; }
   }
+
+  /* Small phones */
+  @media (max-width: 480px) {
+    section { padding: 48px 0; }
+    .hero { padding: 80px 0 40px; }
+    .hero h1 { font-size: 36px; }
+    .hero-sub { font-size: 15px; }
+    .hero-badge { font-size: 10px; padding: 4px 10px; }
+    .int-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+    .int-card { padding: 18px 12px; }
+    .int-card-name { font-size: 13px; }
+    .int-card-logo { width: 36px; height: 36px; margin-bottom: 8px; }
+    .pricing-amount { font-size: 32px; }
+    .btn { padding: 12px 20px; font-size: 12px; width: 100%; justify-content: center; }
+    .hero-actions .btn { width: 100%; }
+    .form-group input,
+    .form-group select,
+    .form-group textarea { font-size: 16px; padding: 12px 14px; }
+    .form-submit { font-size: 13px; padding: 14px; }
+    .footer-copy { font-size: 11px; }
+  }
+
+  /* Desktop — How It Works arrows */
   @media (min-width: 901px) {
     .how-flow { grid-template-columns: 1fr 40px 1fr 40px 1fr; }
     .how-arrow { display: flex; }
     .how-card { padding: 36px 28px; }
-  }
-  @media (max-width: 901px) {
-    .how-arrow { display: none; }
-    .how-flow { grid-template-columns: 1fr; }
+    .nav-toggle { display: none; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -810,12 +899,13 @@
 <!-- Navigation -->
 <nav id="nav">
   <a href="#" class="nav-brand">Full<span>Throttle</span></a>
-  <ul class="nav-links">
+  <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+  <ul class="nav-links" id="navLinks">
     <li><a href="#how">How It Works</a></li>
     <li><a href="#capabilities">Capabilities</a></li>
     <li><a href="#pricing">Pricing</a></li>
     <li><a href="#faq">FAQ</a></li>
-    <li><a href="#cta" class="nav-cta">Book a Demo</a></li>
+    <li><a href="#contact" class="nav-cta">Book a Demo</a></li>
   </ul>
 </nav>
 
@@ -830,7 +920,6 @@
   </div>
   <div class="container">
     <div class="hero-content reveal">
-      <div class="hero-badge">Built for Home Service Contractors</div>
       <h1>Your leads, answered in <em>60 seconds</em>.</h1>
       <p class="hero-sub">
         78% of customers hire the first contractor who responds. FullThrottle makes sure that's you — automatically qualifying leads, booking jobs, and syncing to your CRM while you're on the tools.
@@ -875,21 +964,21 @@
     <div class="how-flow">
       <div class="how-card reveal-fast">
         <div class="how-card-step">Step 1</div>
-        <div class="how-card-icon">📥</div>
+        <div class="how-card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="7,10 12,15 17,10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="12" y1="15" x2="12" y2="3" stroke-width="2" stroke-linecap="round"/></svg></div>
         <h3>Lead comes in</h3>
         <p>A customer fills out your web form, calls, or messages through Google Local Services. FullThrottle detects it instantly.</p>
       </div>
       <div class="how-arrow">→</div>
       <div class="how-card reveal-fast" style="animation-delay: 0.15s;">
         <div class="how-card-step">Step 2</div>
-        <div class="how-card-icon">⚡</div>
+        <div class="how-card-icon"><svg viewBox="0 0 24 24" fill="none"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <h3>Instant response</h3>
         <p>Within 60 seconds, the lead gets a personalized SMS or email — qualifying questions, your service area check, availability.</p>
       </div>
       <div class="how-arrow">→</div>
       <div class="how-card reveal-fast" style="animation-delay: 0.15s;">
         <div class="how-card-step">Step 3</div>
-        <div class="how-card-icon">✅</div>
+        <div class="how-card-icon"><svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke-width="2"/><polyline points="8,12 11,15 16,9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <h3>Synced &amp; booked</h3>
         <p>The qualified lead lands in your CRM (Jobber, Housecall Pro). You get a notification. You show up and do the work.</p>
       </div>
@@ -907,25 +996,25 @@
     </div>
     <div class="cap-grid">
       <div class="cap-card reveal-fast">
-        <div class="cap-card-icon">⚡</div>
+        <div class="cap-card-icon"><svg viewBox="0 0 24 24" fill="none"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <h3>Lead Response</h3>
         <p>Inbound leads from your website, Google LSA, or Facebook get an instant, personalized reply. Qualifies the lead, answers common questions, and syncs to your CRM.</p>
         <div class="cap-card-outcome">↑ 391% conversion</div>
       </div>
       <div class="cap-card">
-        <div class="cap-card-icon">⭐</div>
+        <div class="cap-card-icon"><svg viewBox="0 0 24 24" fill="none"><polygon points="12,2 15,9 22,9 16,14 18,21 12,17 6,21 8,14 2,9 9,9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
         <h3>Review Automation</h3>
         <p>After every completed job, your customer gets a review request. New reviews get AI-drafted replies for your approval. Negative reviews escalate to you immediately.</p>
         <div class="cap-card-outcome">↑ 80% review rate</div>
       </div>
       <div class="cap-card">
-        <div class="cap-card-icon">📍</div>
+        <div class="cap-card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0116 0z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="12" cy="10" r="3" stroke-width="2"/></svg></div>
         <h3>Google Business Profile</h3>
         <p>Regular GBP posts, photo updates, Q&amp;A monitoring, and category optimization. The #1 local SEO lever — managed automatically, ranked by your actual service areas.</p>
         <div class="cap-card-outcome">↑ map pack visibility</div>
       </div>
       <div class="cap-card">
-        <div class="cap-card-icon">📝</div>
+        <div class="cap-card-icon"><svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><polyline points="14,2 14,8 20,8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><line x1="16" y1="13" x2="8" y2="13" stroke-width="2" stroke-linecap="round"/><line x1="16" y1="17" x2="8" y2="17" stroke-width="2" stroke-linecap="round"/></svg></div>
         <h3>Content Publishing</h3>
         <p>Localized blog posts and service pages published into your existing website — WordPress, or via proxy. Uses real project photos, local pricing, and your actual service areas.</p>
         <div class="cap-card-outcome">↑ organic traffic</div>
@@ -945,46 +1034,28 @@
     <div class="int-grid">
       <div class="int-card reveal-fast">
         <div class="int-card-logo">
-          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="24" cy="24" r="22" fill="#3858E9" stroke="#3858E9" stroke-width="1"/>
-            <circle cx="24" cy="24" r="17" fill="white"/>
-            <path d="M24 10c-3.5 0-6.5 1.8-8 4.5l2 1.2c1-2 3-3.3 5.5-3.3 3.3 0 6 2.7 6 6 0 2-.5 3.5-1.5 5l-4 4.5c-1 1.2-1.5 2.5-1.5 4v1h3v-1c0-1 .4-2 1.2-3l4-4.5c1.3-1.5 2-3.5 2-6 0-4.5-3.5-8.4-8.2-8.4z" fill="#3858E9"/>
-          </svg>
+          <img src="/assets/icons/wordpress.svg" alt="WordPress" loading="lazy">
         </div>
         <div class="int-card-name">WordPress</div>
         <div class="int-card-role">Content publishing</div>
       </div>
       <div class="int-card">
         <div class="int-card-logo">
-          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="4" y="4" width="40" height="40" rx="10" fill="#00A86B"/>
-            <path d="M16 32V18c0-2 1.5-3.5 3.5-3.5h9c2 0 3.5 1.5 3.5 3.5v14" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="24" cy="15" r="2.5" fill="white"/>
-            <path d="M14 26h20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-          </svg>
+          <img src="/assets/icons/jobber.svg" alt="Jobber" loading="lazy">
         </div>
         <div class="int-card-name">Jobber</div>
         <div class="int-card-role">CRM &amp; lead sync</div>
       </div>
       <div class="int-card">
         <div class="int-card-logo">
-          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M24 6C16 6 10 13 10 22c0 10 12 20 14 20s14-10 14-20c0-9-6-16-14-16z" fill="#EA4335"/>
-            <circle cx="24" cy="20" r="7" fill="white"/>
-            <circle cx="24" cy="20" r="4" fill="#EA4335"/>
-          </svg>
+          <img src="/assets/icons/googlemybusiness.svg" alt="Google Business Profile" loading="lazy">
         </div>
         <div class="int-card-name">Google GBP</div>
         <div class="int-card-role">Profile &amp; reviews</div>
       </div>
       <div class="int-card">
         <div class="int-card-logo">
-          <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="4" y="4" width="40" height="40" rx="10" fill="#F22F46"/>
-            <circle cx="18" cy="24" r="3" fill="white"/>
-            <circle cx="26" cy="17" r="3" fill="white"/>
-            <circle cx="32" cy="28" r="3" fill="white"/>
-          </svg>
+          <img src="/assets/icons/twilio.svg" alt="Twilio" loading="lazy">
         </div>
         <div class="int-card-name">Twilio</div>
         <div class="int-card-role">SMS &amp; messaging</div>
@@ -1216,7 +1287,7 @@
   const success = document.getElementById('formSuccess');
   const error = document.getElementById('formError');
   const submit = document.getElementById('formSubmit');
-  const WEBHOOK_URL = 'https://hooks.138.197.7.87.nip.io/webhooks/contact';
+  const FORMSPREE_URL = 'https://formspree.io/f/xqejrlzk';
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -1230,11 +1301,11 @@
       phone: document.getElementById('phone').value.trim(),
       business: document.getElementById('business').value,
       message: document.getElementById('message').value.trim(),
-      submitted_at: new Date().toISOString()
+      _subject: 'FullThrottle Demo Request — ' + document.getElementById('name').value.trim()
     };
 
     try {
-      const res = await fetch(WEBHOOK_URL, {
+      const res = await fetch(FORMSPREE_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data)
@@ -1255,8 +1326,8 @@
   });
 </script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.dots.min.js"></script>
+<script src="/assets/scripts/three.r134.min.js"></script>
+<script src="/assets/scripts/vanta.dots.min.js"></script>
 <script>
 VANTA.DOTS({
   el: "#heroBg",
